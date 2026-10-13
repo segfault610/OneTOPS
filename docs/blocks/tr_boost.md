@@ -21,11 +21,11 @@ and OBX on silicon (OB always acts, because it is the bleeder).
 
 | | ben = 0 | **ben = 1** |
 |---|---|---|
-| Undershoot, 100 ns edge | 170 mV | **97 mV** |
-| Undershoot, 10 ns edge | 472 mV | **221 mV** |
-| Overshoot, 100 ns / 10 ns | 105 / 259 mV | 106 / 260 mV |
-| L4 workload dip (1.3 → 9.6 mA, 10 ns) | 536 mV | **258 mV** |
-| PVT worst undershoot 100 / 10 ns | 245 / 561 mV | **125 / 282 mV** |
+| Undershoot, 100 ns edge | 170 mV | **98 mV** |
+| Undershoot, 10 ns edge | 472 mV | **234 mV** |
+| Overshoot, 100 ns / 10 ns | 105 / 258 mV | 107 / 260 mV |
+| L4 workload dip (1.3 → 9.6 mA, 10 ns) | 536 mV | **329 mV** |
+| PVT worst undershoot 100 / 10 ns | 245 / 561 mV | **127 / 296 mV** |
 
 ## Lessons learned
 - **The first OBX used LVT PMOS for the ×20 mirror.** At 125 °C its 80 µm of LVT leaked more than

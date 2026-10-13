@@ -59,7 +59,7 @@ foreach ben 1.8 0
     alterparam tedge=$tr
     reset
     alter @vben[dc]=$ben
-    tran 1n 12u
+    tran 1n 12u 0 0.5n
     meas tran vpre find v(vout) at=1.9u
     meas tran vmin min v(vout) from=2u to=6u
     meas tran vhi find v(vout) at=5.9u
@@ -68,6 +68,10 @@ foreach ben 1.8 0
     let under_mV = (vpre - vmin)*1000
     let over_mV = (vmax - vhi)*1000
     echo TRAN BEN=$ben EDGE=$tr under_mV=$&under_mV over_mV=$&over_mV
+    if $?batchmode
+    else
+      plot v(vout) v(xldo.x) title load-step-ben=$ben-edge=$tr
+    end
   end
 end
 .endc"}

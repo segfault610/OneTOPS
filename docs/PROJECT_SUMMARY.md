@@ -58,7 +58,8 @@ The proposal's Cadence flow maps onto open-source tools:
 | Device characterization | ngspice gm/Id sweeps + Python tables | `sim/char/`, `scripts/gmid_table.py` |
 | PVT / stb analysis | Corner sweep script + **Tian loop-gain probe** | `scripts/run_corners.sh`, `lg_probe` cell |
 | SystemVerilog / QuestaSim | **iverilog** (sim) + **Verilator** (lint) | `rtl/` |
-| AMS co-simulation | ngspice `d_cosim` + Verilator *(planned)* | — |
+| AMS co-simulation (Verilog-AMS substitute) | **ngspice XSPICE `d_cosim` + Verilator**: real RTL inside the analog transient | `scripts/build_ams.sh`, `tb_ams_dvs_ctrl` |
+| Analog behavioral models (Verilog-A) | OpenVAF → OSDI in ngspice *(proposed; needs OpenVAF installed)* | — |
 | Layout / DRC / LVS / PEX | **Magic / KLayout / netgen** *(planned)* | — |
 | Tapeout | **Tiny Tapeout** analog template (`tt_um_*`) *(planned)* | — |
 
@@ -82,7 +83,7 @@ it is integrated.
 | L1 | `bias_mirror`, `vset_gen`, `ota5t`, `fvf_core`, `pass_pmos`, `comp_rc`, `lg_probe`, `tr_boost`, `mux2_tg`, `rdac4`, `decap`, `load_emu` | `tb_bias_mirror`, `tb_vset_gen`, `tb_rdac4` |
 | L2 | `ldo_core` (full regulation loop) | `tb_ldo_core_dc / _ac / _tran` |
 | L3 | `ldo_top` (DVS LDO IP) | `tb_ldo_top_dvs` |
-| L4 | `chip_top` (TT test chip) | `tb_chip_workload` |
+| L4 | `chip_top` (TT test chip) | `tb_chip_workload`, `tb_ams_dvs_ctrl` (with RTL) |
 
 The schematics are **generated**. `SIZES` in `scripts/gen_xschem.py` is the single source of truth,
 so hand edits in xschem are overwritten on regeneration. Edit `SIZES` (or the cell's `gen_*`
@@ -97,4 +98,5 @@ function), then regenerate.
 - `docs/PROGRESS.md`: revision history, current status vs. proposal phases, open issues
 - `docs/blocks/`: one page per block (function, sizing, results, TODO)
 - `docs/LITERATURE_SURVEY.md`: papers to read, grouped by topic
+- `docs/guides/`: how to run, demo and modify everything (GUI and CLI)
 - `README.md`: quick start

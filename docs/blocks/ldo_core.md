@@ -16,16 +16,16 @@
 | | UGF | 13 MHz (10 µA) … 238 MHz (10 mA) |
 | | PM | 74.8° (10 µA), 79.9°, 88.9°, 90.9°, 92.4° (10 mA) |
 | | PSRR | −31 dB @ 1 kHz, −20 dB @ 1 MHz |
-| `tb_ldo_core_tran` | 0.1↔10 mA, 100 ns, boost on | −97 / +106 mV |
-| | 0.1↔10 mA, 10 ns, boost on | −221 / +260 mV |
-| | boost off (`ben` = 0) | −170 / +105 mV (100 ns), −472 / +259 mV (10 ns) |
+| `tb_ldo_core_tran` | 0.1↔10 mA, 100 ns, boost on | −98 / +107 mV |
+| | 0.1↔10 mA, 10 ns, boost on | −234 / +260 mV |
+| | boost off (`ben` = 0) | −170 / +105 mV (100 ns), −472 / +258 mV (10 ns) |
 
 ## PVT (`scripts/run_corners.sh` + `scripts/corner_summary.py`, 45 points × 5 loads)
 - Worst valid PM: **46.8°** (fs, 125 °C, 1.8 V, 10 µA).
 - **5 invalid points** (ff/fs, 125 °C, 1.98 V, loads ≤ 100 µA, plus fs at 1 mA): regulation is lost from
   pass-device leakage (open issue 1).
-- Worst undershoot with boost on: 125 mV (100 ns), 282 mV (10 ns), both at ss/125 °C/1.62 V.
-- Worst overshoot with boost on: 139 mV (100 ns), 321 mV (10 ns).
+- Worst undershoot with boost on: 127 mV (100 ns), 296 mV (10 ns), both at ss/125 °C/1.62 V.
+- Worst overshoot with boost on: 139 mV (100 ns), 322 mV (10 ns).
 
 Iq breakdown (≈ 270 µA): ref 20, X sink 20, replica (MPD 20 + MPS 20), OTA tail 40,
 bleeder MND 100, UB (20 + 10), OBX ≈ 10–20.

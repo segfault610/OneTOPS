@@ -76,6 +76,10 @@ foreach il 10u 100u 1m 5m 10m
   meas ac phu find tph at=ugf
   let pm = 180 + phu
   echo LG ILOAD=$il T0dB=$&t0 UGF=$&ugf PM=$&pm
+  if $?batchmode
+  else
+    plot tdb tph xlog title loop-gain-ILOAD=$il
+  end
   alter @i.xldo.xprobe.iinj[acmag]=0
   alter @vin[acmag]=1
   ac dec 20 10 10G

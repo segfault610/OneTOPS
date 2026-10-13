@@ -71,4 +71,9 @@ meas dc v18 find v(vout) at=1.8
 meas dc v165 find v(vout) at=1.65
 let linereg_mV_per_V = (v18 - v165)/0.15*1000
 print linereg_mV_per_V
+if $?batchmode
+else
+plot dc1.v(vout) xlabel 'ILOAD (A)' title 'load regulation'
+plot dc3.v(vout) xlabel 'VIN (V)' title 'line regulation @ 10 mA'
+end
 .endc"}

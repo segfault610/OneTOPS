@@ -74,4 +74,9 @@ C {devices/code_shown.sym} 400 400 0 0 {name=NGSPICE only_toplevel=true value=".
 dc vref 0.95 1.5 0.05
 let err_mV = (v(xdut.vrep) - v(vref))*1000
 print v(vref) v(vset) err_mV
+if $?batchmode
+else
+plot err_mV ylabel 'vrep - vref (mV)'
+plot v(vset) v(vref)
+end
 .endc"}

@@ -67,4 +67,8 @@ meas dc i_fvf_06 find i1 at=0.6
 meas dc vds_min when i1=19u cross=1
 op
 print -i(vo1) -i(vo2) -i(vo3) -i(vo4) -i(vo5)
+if $?batchmode
+else
+plot -i(vo1)*1e6 ylabel 'o_fvf current (uA)' xlabel 'Vds (V)'
+end
 .endc"}

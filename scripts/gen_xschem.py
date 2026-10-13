@@ -429,18 +429,41 @@ def gen_chip_top():
 
 
 # ============================================================ testbenches ======
+PLOTS = {
+    # shown only when ngspice runs interactively (xschem Simulate button), skipped in batch runs
+    "tb_bias_mirror": "plot -i(vo1)*1e6 ylabel 'o_fvf current (uA)' xlabel 'Vds (V)'",
+    "tb_vset_gen": "plot err_mV ylabel 'vrep - vref (mV)'\nplot v(vset) v(vref)",
+    "tb_rdac4": "plot v(out) ylabel 'DAC out (V)'\nplot v(d0) v(d1)+2 v(d2)+4 v(d3)+6",
+    "tb_ldo_core_dc": "plot dc1.v(vout) xlabel 'ILOAD (A)' title 'load regulation'\nplot dc3.v(vout) xlabel 'VIN (V)' title 'line regulation @ 10 mA'",
+    "tb_ldo_top_dvs": "plot v(vout) v(xtop.vref) title 'DVS staircase'",
+    "tb_ams_dvs_ctrl": "plot v(vout) v(xchip.xldo.vref) title 'AMS: VOUT and VREF'\nplot code title 'dvs_ctrl code_out'\nplot v(ben) v(settled)+2 v(ld0)+4 title 'boost_en / settled / load'",
+}
+
+
+def with_plots(name, control):
+    """Insert the interactive-only plot block just before the final .endc."""
+    if name not in PLOTS:
+        return control
+    blk = "if $?batchmode\nelse\n" + PLOTS[name].replace("\\n", "\n") + "\nend\n"
+    i = control.rindex(".endc")
+    return control[:i] + blk + control[i:]
+
+
 def tb(name, title, build, control):
+    """NOTE: every transient here sets an explicit max step (4th tran argument). Without it,
+    ngspice under-resolves 10 ns load edges (the L4 dip read 258 mV instead of 329 mV)."""
     s = Sch(title)
     build(s)
     s.code("MODELS", -300, 400, f".lib {PDK_LIB} tt\n.temp 27\n.option savecurrents")
-    s.code("NGSPICE", 400, 400, control)
+    s.code("NGSPICE", 400, 400, with_plots(name, control))
     s.write(os.path.join(ROOT, "xschem", TBLIB, name + ".sch"))
 
 
-def supplies(s, vin="1.8", ib="20u"):
+def supplies(s, vin="1.8", ib="20u", ben=True):
     s.two("vsource", "Vin", -200, 0, "vin", "0", f"dc {vin} ac 0")
     s.two("isource", "Ib", -100, 0, "vin", "ibn", f"dc {ib}")
-    s.two("vsource", "Vben", -300, 0, "ben", "0", "dc 1.8")
+    if ben:
+        s.two("vsource", "Vben", -300, 0, "ben", "0", "dc 1.8")
 
 
 def gen_tbs():
@@ -488,7 +511,7 @@ print v(vref) v(vset) err_mV
         s.inst("rdac4", "xdut", 700, 0, dict(vhi="vhi", vlo="vlo", d0="d0", d1="d1", d2="d2", d3="d3", out="out", vdd="vdd", vss="0"))
         s.two("capa", "Cl", 1000, 0, "out", "0", "100f")
     tb("tb_rdac4", "tb_rdac4 -- L1: 16-code staircase, monotonicity / DNL", b_dac, """.control
-tran 10n 16u
+tran 10n 16u 0 10n
 let k = 0
 echo code  vout(V)   step(mV)
 let vp = 0
@@ -557,6 +580,10 @@ foreach il 10u 100u 1m 5m 10m
   meas ac phu find tph at=ugf
   let pm = 180 + phu
   echo LG ILOAD=$il T0dB=$&t0 UGF=$&ugf PM=$&pm
+  if $?batchmode
+  else
+    plot tdb tph xlog title loop-gain-ILOAD=$il
+  end
   alter @i.xldo.xprobe.iinj[acmag]=0
   alter @vin[acmag]=1
   ac dec 20 10 10G
@@ -574,7 +601,7 @@ foreach ben 1.8 0
     alterparam tedge=$tr
     reset
     alter @vben[dc]=$ben
-    tran 1n 12u
+    tran 1n 12u 0 0.5n
     meas tran vpre find v(vout) at=1.9u
     meas tran vmin min v(vout) from=2u to=6u
     meas tran vhi find v(vout) at=5.9u
@@ -583,6 +610,10 @@ foreach ben 1.8 0
     let under_mV = (vpre - vmin)*1000
     let over_mV = (vmax - vhi)*1000
     echo TRAN BEN=$ben EDGE=$tr under_mV=$&under_mV over_mV=$&over_mV
+    if $?batchmode
+    else
+      plot v(vout) v(xldo.x) title load-step-ben=$ben-edge=$tr
+    end
   end
 end
 .endc"""
@@ -603,7 +634,7 @@ end
         s.two("isource", "Il", 1200, 0, "vout", "0", "dc 5m")
         s.two("capa", "Cl", 1300, 0, "vout", "0", S["cl"])
     tb("tb_ldo_top_dvs", "tb_ldo_top_dvs -- L3: DVS staircase, code 0..15 (5 us/code) at 5 mA", b_top, """.control
-tran 10n 80u
+tran 10n 80u 0 10n
 echo code  vref(V)   vout(V)   err(mV)
 let k = 0
 while k < 16
@@ -645,7 +676,7 @@ write tb_ldo_top_dvs.raw
 foreach ben 1.8 0
 alter @vben[dc]=$ben
 echo WORKLOAD BEN=$ben
-tran 5n 70u
+tran 5n 70u 0 1n
 meas tran v_sleep find v(vout) at=9.5u
 meas tran v_sense find v(vout) at=29u
 meas tran v_pre find v(vout) at=34.9u
@@ -662,7 +693,65 @@ print under_inf_mV over_comm_mV over_sleep_mV
 meas tran iin_avg avg i(vin) from=0 to=70u
 let iavg_mA = -iin_avg*1000
 print iavg_mA
+if $?batchmode
+else
+  plot v(vout) title workload-ben=$ben
 end
+end
+.endc""")
+
+    # ---- L4 AMS: real dvs_ctrl RTL (Verilator -> d_cosim) drives the analog chip_top
+    def b_ams(s):
+        supplies(s, ben=False)
+        s.two("isource", "Ibl", 0, 0, "vin", "ibl", "dc 20u")
+        s.two("vsource", "Vhi", 100, 0, "vhi", "0", "1.48")
+        s.two("vsource", "Vlo", 200, 0, "vlo", "0", "1.00")
+        # Edge-AI load: sense 1.28 mA @ 5 us, inference 9.6 mA @ 18 us (inside the hint window), sleep @ 26 us
+        lv = {0: [(18, 1), (26, 0)], 1: [(5, 1), (26, 0)], 2: [(18, 1), (26, 0)], 3: [(18, 1), (26, 0)]}
+        for b, ev in lv.items():
+            pts, lvl = ["0 0"], 0
+            for t, v in ev:
+                pts += [f"{t}u {1.8 * lvl:g}", f"{t}.01u {1.8 * v:g}"]
+                lvl = v
+            s.two("vsource", f"Vl{b}", 300 + 100 * b, 0, f"ld{b}", "0", "pwl(" + " ".join(pts) + ")")
+        s.inst("chip_top", "xchip", 1000, 0, dict(vhi="vhi", vlo="vlo", d0="d0", d1="d1", d2="d2", d3="d3", ibn="ibn", ben="ben",
+               ld0="ld0", ld1="ld1", ld2="ld2", ld3="ld3", ibl="ibl", vout="vout", vin="vin", vss="0"))
+        s.two("capa", "Cpad", 1300, 0, "vout", "0", "5p")
+        s.text(-300, 300, "Digital: dvs_ctrl.sv compiled by scripts/build_ams.sh (Verilator) and loaded by the d_cosim "
+               "instance in the NGSPICE block. code_out -> d3..d0, boost_en -> ben", 0.3)
+    tb("tb_ams_dvs_ctrl", "tb_ams_dvs_ctrl -- L4 AMS: dvs_ctrl RTL (d_cosim) + chip_top. Hint pre-boost before an AI burst",
+       b_ams, """* ---- digital side (XSPICE). Stimulus: analog PWL -> adc_bridge
+Vclk aclk 0 pulse(0 1.8 0 1n 1n 49n 100n)
+Vrst arst 0 pwl(0 0 1u 0 1.001u 1.8)
+* code_req = 7 (0111) until 30 us, then 4 (0100)
+Vcr3 acr3 0 dc 0
+Vcr2 acr2 0 dc 1.8
+Vcr1 acr1 0 pwl(0 1.8 30u 1.8 30.001u 0)
+Vcr0 acr0 0 pwl(0 1.8 30u 1.8 30.001u 0)
+* workload hint: AI burst expected -> raise VOUT 3 codes and enable boost (12 us .. 28 us)
+Vhint ahint 0 pwl(0 0 12u 0 12.001u 1.8 28u 1.8 28.001u 0)
+abrin [aclk arst acr3 acr2 acr1 acr0 ahint] [dclk drst dcr3 dcr2 dcr1 dcr0 dhint] adcb
+.model adcb adc_bridge in_low=0.9 in_high=0.9
+* port order = Verilog port order, vectors MSB first
+adut [dclk drst dcr3 dcr2 dcr1 dcr0 dhint] [dco3 dco2 dco1 dco0 dben dset] dvs
+.model dvs d_cosim simulation=../ams/dvs_ctrl.so
+abrout [dco3 dco2 dco1 dco0 dben dset] [d3 d2 d1 d0 ben settled] dacb
+.model dacb dac_bridge out_low=0 out_high=1.8 t_rise=2n t_fall=2n
+.control
+tran 5n 45u 0 1n
+let code = (v(d0) + 2*v(d1) + 4*v(d2) + 8*v(d3))/1.8
+meas tran code_a find code at=11.5u
+meas tran vout_a find v(vout) at=11.5u
+meas tran code_b find code at=17.5u
+meas tran vout_b find v(vout) at=17.5u
+meas tran vmin_burst min v(vout) from=18u to=20u
+meas tran code_c find code at=44u
+meas tran vout_c find v(vout) at=44u
+let dip_mV = (vout_b - vmin_burst)*1000
+echo AMS req7: code=$&code_a vout=$&vout_a
+echo AMS hint: code=$&code_b vout=$&vout_b  burst dip_mV=$&dip_mV
+echo AMS req4: code=$&code_c vout=$&vout_c
+write tb_ams_dvs_ctrl.raw v(vout) v(xchip.xldo.vref) code v(ben) v(settled) v(ld0)
 .endc""")
 
 

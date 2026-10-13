@@ -7,3 +7,11 @@ results/*.log
 results/gmid_*_L*.txt
 results/pass_sizing.txt
 results/ldo_base_*.txt
+
+# papers: copyrighted PDFs stay local (see papers/README.md)
+papers/*.pdf
+# AMS build products (rebuild with scripts/build_ams.sh)
+sim/ams/*.so
+sim/ams/*_obj_dir/
+sim/ams/*.v
+sim/ams/*.log

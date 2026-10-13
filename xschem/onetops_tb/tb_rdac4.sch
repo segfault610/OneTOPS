@@ -69,7 +69,7 @@ C {devices/code_shown.sym} -300 400 0 0 {name=MODELS only_toplevel=true value=".
 .temp 27
 .option savecurrents"}
 C {devices/code_shown.sym} 400 400 0 0 {name=NGSPICE only_toplevel=true value=".control
-tran 10n 16u
+tran 10n 16u 0 10n
 let k = 0
 echo code  vout(V)   step(mV)
 let vp = 0
@@ -80,5 +80,10 @@ while k < 16
   echo $&k  $&vk  $&st
   let vp = vk
   let k = k + 1
+end
+if $?batchmode
+else
+plot v(out) ylabel 'DAC out (V)'
+plot v(d0) v(d1)+2 v(d2)+4 v(d3)+6
 end
 .endc"}

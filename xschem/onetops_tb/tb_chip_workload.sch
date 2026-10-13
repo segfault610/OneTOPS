@@ -121,7 +121,7 @@ C {devices/code_shown.sym} 400 400 0 0 {name=NGSPICE only_toplevel=true value=".
 foreach ben 1.8 0
 alter @vben[dc]=$ben
 echo WORKLOAD BEN=$ben
-tran 5n 70u
+tran 5n 70u 0 1n
 meas tran v_sleep find v(vout) at=9.5u
 meas tran v_sense find v(vout) at=29u
 meas tran v_pre find v(vout) at=34.9u
@@ -138,5 +138,9 @@ print under_inf_mV over_comm_mV over_sleep_mV
 meas tran iin_avg avg i(vin) from=0 to=70u
 let iavg_mA = -iin_avg*1000
 print iavg_mA
+if $?batchmode
+else
+  plot v(vout) title workload-ben=$ben
+end
 end
 .endc"}

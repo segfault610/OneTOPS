@@ -88,7 +88,7 @@ C {devices/code_shown.sym} -300 400 0 0 {name=MODELS only_toplevel=true value=".
 .temp 27
 .option savecurrents"}
 C {devices/code_shown.sym} 400 400 0 0 {name=NGSPICE only_toplevel=true value=".control
-tran 10n 80u
+tran 10n 80u 0 10n
 echo code  vref(V)   vout(V)   err(mV)
 let k = 0
 while k < 16
@@ -100,4 +100,8 @@ while k < 16
   let k = k + 1
 end
 write tb_ldo_top_dvs.raw
+if $?batchmode
+else
+plot v(vout) v(xtop.vref) title 'DVS staircase'
+end
 .endc"}

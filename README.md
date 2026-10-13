@@ -6,7 +6,8 @@ The proposal is `docs/3)Revised_EdgeAI_Capacitorless_LDO_Proposal-2.pdf`.
 
 **Documentation:** [project summary (workflows, PDKs)](docs/PROJECT_SUMMARY.md) ·
 [overall progress & open issues](docs/PROGRESS.md) · [per-block pages](docs/blocks/README.md) ·
-[literature survey](docs/LITERATURE_SURVEY.md)
+[literature survey](docs/LITERATURE_SURVEY.md) ·
+[**user guides**](docs/guides/README.md)
 
 ## PDK decision
 
@@ -54,6 +55,7 @@ workload-hint pre-boost (+3 LSB) and a `boost_en` output. Its testbench is `rtl/
 ```bash
 cd /media/additional_space/OneTOPS
 python3 scripts/gen_xschem.py               # (re)generate cells, symbols, testbenches
+scripts/build_ams.sh                        # Verilator-compile dvs_ctrl.sv for d_cosim (AMS co-sim)
 scripts/run_tb.sh all                       # netlist with xschem + simulate -> results/<tb>.log
 scripts/run_tb.sh tb_ldo_core_ac            # a single testbench
 scripts/run_corners.sh                      # 5 corners x {-40,27,125} C x VIN {1.62,1.8,1.98}
@@ -64,7 +66,7 @@ cd sim/char && ngspice -b gmid.spice && python3 ../../scripts/gmid_table.py   # 
 ```
 
 Testbenches (`xschem/onetops_tb/`): `tb_bias_mirror`, `tb_vset_gen`, `tb_rdac4` (L1);
-`tb_ldo_core_dc/ac/tran` (L2); `tb_ldo_top_dvs` (L3); `tb_chip_workload` (L4).
+`tb_ldo_core_dc/ac/tran` (L2); `tb_ldo_top_dvs` (L3); `tb_chip_workload`, `tb_ams_dvs_ctrl` (L4, RTL co-sim).
 
 ## Rev C status (TT, 27 °C, VIN = 1.8 V, C_L = 20 pF on-chip)
 
@@ -75,8 +77,8 @@ Testbenches (`xschem/onetops_tb/`): `tb_bias_mirror`, `tb_vset_gen`, `tb_rdac4` 
 | PM | 74.8° (10 µA) … 92° (10 mA); worst valid over PVT 46.8° |
 | PSRR | −31 dB @ 1 kHz, −20 dB @ 1 MHz |
 | Iq | 270 µA |
-| 0.1↔10 mA step, boost on (off) | 100 ns: −97 / +106 mV (−170 / +105); 10 ns: −221 / +260 mV (−472 / +259) |
-| Edge-AI workload dip (L4, 10 ns) | **258 mV** with boost vs 536 mV without |
+| 0.1↔10 mA step, boost on (off) | 100 ns: −98 / +107 mV (−170 / +105); 10 ns: −234 / +260 mV (−472 / +258) |
+| Edge-AI workload dip (L4, 10 ns) | **329 mV** with boost vs 536 mV without (AMS run with the real `dvs_ctrl`: 341 mV) |
 
 **Top open issue:** at 125 °C, VIN = 1.98 V and light load, pass-device leakage exceeds the bleeder
 and VOUT drifts up. Details and the rest of the list are in [docs/PROGRESS.md](docs/PROGRESS.md).
@@ -90,7 +92,7 @@ and VOUT drifts up. Details and the rest of the list are in [docs/PROGRESS.md](d
 ## Next steps
 
 Adaptive bias (removes the fixed 100 µA bleeder and fixes hot light-load leakage), DC offset fix,
-on-chip references, real sky130 passives, AMS co-sim, layout → DRC/LVS/PEX → TT wrapper.
+on-chip references, real sky130 passives, Verilog-A behavioral models, layout → DRC/LVS/PEX → TT wrapper.
 See [docs/PROGRESS.md](docs/PROGRESS.md).
 
 ## Layout of this repo
