@@ -1,8 +1,12 @@
 # OneTOPS: Workload-Aware Capacitorless FVF LDO (sky130)
 
 Output-capacitorless LDO with a flipped-voltage-follower (FVF) loop and a 4-bit DVS reference,
-for local supply regulation of bursty Edge-AI / AIoT loads. The proposal is
-`docs/3)Revised_EdgeAI_Capacitorless_LDO_Proposal-2.pdf`.
+for local supply regulation of bursty Edge-AI / AIoT loads, with a capacitive transient-boost path.
+The proposal is `docs/3)Revised_EdgeAI_Capacitorless_LDO_Proposal-2.pdf`.
+
+**Documentation:** [project summary (workflows, PDKs)](docs/PROJECT_SUMMARY.md) ·
+[overall progress & open issues](docs/PROGRESS.md) · [per-block pages](docs/blocks/README.md) ·
+[literature survey](docs/LITERATURE_SURVEY.md)
 
 ## PDK decision
 
@@ -23,16 +27,17 @@ Every block is its own `.sch` + `.sym`, so it can be placed in the level above l
 | Level | Cell | Function |
 |---|---|---|
 | L0 | `inv`, `tgate` | 1.8 V inverter, transmission gate |
-| L1 | `bias_mirror` | NMOS mirror bank from IB = 20 µA: FVF sink, 100 µA bleeder, PMOS reference, OTA tail |
+| L1 | `bias_mirror` | NMOS mirror bank from IB = 20 µA: FVF sink, PMOS reference, OTA tail, boost bias / dead zone |
 | L1 | `vset_gen` | Replica loop: 5T OTA + MR so VSET = VREF − Vsg(MR). VREF input is high-impedance |
 | L1 | `ota5t` | 5-transistor OTA (NMOS in, LVT PMOS mirror) |
 | L1 | `fvf_core` | FVF control PMOS MC (LVT, 100/1 µm) |
 | L1 | `pass_pmos` | Pass device, std-Vt PMOS 70×10/0.35 µm. High \|Vth\| keeps it off at the FVF gate clamp |
 | L1 | `comp_rc` | Miller compensation Rz + Cc (gate X → VOUT) |
 | L1 | `lg_probe` | Tian loop-gain probe (transparent unless `acmag` is altered) |
+| L1 | `tr_boost` | Transient boost: AC-coupled undershoot booster (dead zone, ×20 X pull-down), dynamic 100 µA bleeder, X pull-up; `ben` enable |
 | L1 | `mux2_tg`, `rdac4` | 4-bit R-string DAC + TG mux tree: VREF = 1.00 V + 30 mV × code |
 | L1 | `decap`, `load_emu` | 20 pF on-chip decap; on-chip 4-bit 0–9.6 mA workload emulator |
-| L2 | `ldo_core` | Complete FVF regulation loop (VREF in) |
+| L2 | `ldo_core` | Complete FVF regulation loop incl. `tr_boost` (VREF, ben in) |
 | L3 | `ldo_top` | DVS LDO IP: `rdac4` + `ldo_core` |
 | L4 | `chip_top` | Tiny Tapeout test chip: `ldo_top` + decap + `load_emu` |
 
@@ -52,6 +57,7 @@ python3 scripts/gen_xschem.py               # (re)generate cells, symbols, testb
 scripts/run_tb.sh all                       # netlist with xschem + simulate -> results/<tb>.log
 scripts/run_tb.sh tb_ldo_core_ac            # a single testbench
 scripts/run_corners.sh                      # 5 corners x {-40,27,125} C x VIN {1.62,1.8,1.98}
+python3 scripts/corner_summary.py           # worst case; flags points where regulation is lost
 xschem xschem/onetops/ldo_core.sch          # browse/edit (./xschemrc is picked up automatically)
 cd rtl && iverilog -g2012 -o ../results/tb_dvs_ctrl.vvp dvs_ctrl.sv tb/tb_dvs_ctrl.sv && vvp ../results/tb_dvs_ctrl.vvp
 cd sim/char && ngspice -b gmid.spice && python3 ../../scripts/gmid_table.py   # gm/Id tables
@@ -60,23 +66,20 @@ cd sim/char && ngspice -b gmid.spice && python3 ../../scripts/gmid_table.py   # 
 Testbenches (`xschem/onetops_tb/`): `tb_bias_mirror`, `tb_vset_gen`, `tb_rdac4` (L1);
 `tb_ldo_core_dc/ac/tran` (L2); `tb_ldo_top_dvs` (L3); `tb_chip_workload` (L4).
 
-## Rev B status (TT, 27 °C, VIN = 1.8 V, C_L = 20 pF on-chip, unless noted)
+## Rev C status (TT, 27 °C, VIN = 1.8 V, C_L = 20 pF on-chip)
 
-| Metric | Result | Note |
-|---|---|---|
-| VOUT range (DVS) | 1.00 – 1.45 V, 16 codes, monotonic | DAC step 30.0 ± 0.02 mV |
-| DC accuracy | +12 … +15 mV systematic | MC/MR Vds mismatch + 5T OTA offset: **to fix** |
-| Load regulation | 1.0 mV/mA (0–10 mA) | |
-| Line regulation | 28 mV/V @ 10 mA | weak: single-stage FVF loop gain |
-| Dropout | ~400 mV @ 10 mA | |
-| Iq | 221 µA | 100 µA of it is the stability bleeder → adaptive-bias target |
-| Loop gain / PM | 59–66 dB; PM ≥ 55.8° (10 µA–10 mA), **≥ 55.2° over 45 PVT corners** | |
-| PSRR | −31 dB @ 1 kHz, −20 dB @ 1 MHz | FVF limit ≈ 1/(g_mc·R_X) |
-| Load step 0.1↔10 mA, 100 ns edges | −171 / +113 mV (PVT worst −245 / +170 mV) | slew-limited at gate node X |
-| Workload profile, 10 ns edges (L4) | **−537 mV** dip at inference burst, +228 mV at sleep | baseline the boost path must beat |
+| Metric | Result |
+|---|---|
+| VOUT (DVS) | 1.00–1.45 V, 16 codes, monotonic; **+12…15 mV offset** |
+| Load / line regulation | 1.0 mV/mA / 28 mV/V |
+| PM | 74.8° (10 µA) … 92° (10 mA); worst valid over PVT 46.8° |
+| PSRR | −31 dB @ 1 kHz, −20 dB @ 1 MHz |
+| Iq | 270 µA |
+| 0.1↔10 mA step, boost on (off) | 100 ns: −97 / +106 mV (−170 / +105); 10 ns: −221 / +260 mV (−472 / +259) |
+| Edge-AI workload dip (L4, 10 ns) | **258 mV** with boost vs 536 mV without |
 
-Rev A (C_L = 100 pF, Cc = 12 pF) gave −295 / +147 mV. Undershoot hardly depends on C_L, because
-the 20 µA sink slews the gate node X, so the next block to build is the **transient-boost path**.
+**Top open issue:** at 125 °C, VIN = 1.98 V and light load, pass-device leakage exceeds the bleeder
+and VOUT drifts up. Details and the rest of the list are in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 ## Tiny Tapeout constraints (check the current shuttle docs)
 
@@ -86,18 +89,15 @@ the 20 µA sink slews the gate node X, so the next block to build is the **trans
 
 ## Next steps
 
-1. Transient-boost path (AC-coupled VOUT dip detector → extra gate pull-down / pull-up at X) and adaptive bias (load-tracking IB, to remove the fixed 100 µA bleeder).
-2. Fix the +12–15 mV DC offset (match MC/MR Vds, cascode the replica, or increase OTA gain).
-3. On-chip bias (beta-multiplier) and VHI/VLO reference (bandgap or pin trims).
-4. Replace ideal R/C with sky130 devices (`res_xhigh_po`, `cap_mim_m3_1`); Monte-Carlo mismatch.
-5. AMS co-simulation of `dvs_ctrl` with the analog top (ngspice `d_cosim` / Verilator).
-6. Layout (Magic/KLayout) → DRC/LVS (netgen) → PEX → Tiny Tapeout analog template (`tt_um_*` wrapper).
+Adaptive bias (removes the fixed 100 µA bleeder and fixes hot light-load leakage), DC offset fix,
+on-chip references, real sky130 passives, AMS co-sim, layout → DRC/LVS/PEX → TT wrapper.
+See [docs/PROGRESS.md](docs/PROGRESS.md).
 
 ## Layout of this repo
 
 ```
-docs/            proposal
-scripts/         gen_xschem.py, run_tb.sh, run_corners.sh, gmid_table.py
+docs/            proposal, PROJECT_SUMMARY, PROGRESS, LITERATURE_SURVEY, blocks/
+scripts/         gen_xschem.py, run_tb.sh, run_corners.sh, corner_summary.py, gmid_table.py
 xschem/onetops   cell library (.sch/.sym)      xschem/onetops_tb  testbenches
 sim/char         gm/Id + pass-device characterization netlists
 sim/xschem_netlist  generated netlists (+ .spiceinit)
@@ -105,4 +105,3 @@ sim/ref_a0_flat  superseded flat Rev A0 netlists (golden reference, Tian-probe c
 rtl/             dvs_ctrl.sv + tb/
 results/         logs, gm/Id tables, corner summaries
 ```
-# OneTOPS
