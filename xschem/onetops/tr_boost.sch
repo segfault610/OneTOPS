@@ -149,7 +149,7 @@ C {sky130_fd_pr/nfet_01v8.sym} 1100 100 0 0 {name=MND
 L=1
 W=4
 nf=1
-mult=5
+mult=2
 ad="expr('int((@nf + 1)/2) * @W / @nf * 0.29')"
 pd="expr('2*int((@nf + 1)/2) * (@W / @nf + 0.29)')"
 as="expr('int((@nf + 2)/2) * @W / @nf * 0.29')"
@@ -167,7 +167,7 @@ N 1120 130 1120 150 {lab=vss}
 C {devices/lab_pin.sym} 1120 150 3 1 {name=l38 sig_type=std_logic lab=vss}
 N 1120 100 1140 100 {lab=vss}
 C {devices/lab_pin.sym} 1140 100 0 1 {name=l39 sig_type=std_logic lab=vss}
-T {OB: MND = 100 uA minimum-load bleeder whose gate is AC-coupled to VOUT (overshoot => more sink)} 1000 230 0 0 0.25 0.25 {}
+T {OB: MND = 40 uA minimum-load bleeder whose gate is AC-coupled to VOUT (overshoot => more sink)} 1000 230 0 0 0.25 0.25 {}
 C {sky130_fd_pr/pfet_01v8_lvt.sym} 1500 -150 0 0 {name=MPDZ
 L=0.5
 W=40

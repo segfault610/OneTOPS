@@ -20,8 +20,8 @@ VREF ─────────────────────────
 | ota5t MP1/MP2 | pfet_01v8_lvt | 20/2 | mirror load |
 | Cset | ideal | 2 pF | dominant pole / filters VREF steps |
 
-**Verification (`tb_vset_gen`, TT):** replica error (vrep − VREF) is **+8.2 mV at 0.95 V to +0.7 mV
-at 1.5 V**. VSET spans 0.45–1.01 V.
+**Verification (`tb_vset_gen`, TT, Rev D 5 µA replica, no adaptive part):** replica error (vrep − VREF) is
+**+5.7 mV at 1.0 V, +3.3 mV at 1.2 V, +0.8 mV at 1.4 V** (Rev C, 20 µA: +8.2 mV at 0.95 V … +0.7 mV at 1.5 V).
 **System-level:** VOUT − VREF = +12…15 mV across codes (see `ldo_top`). The extra error comes from
 the MC/MR Vds mismatch (MC Vsd ≈ 0.3–0.8 V vs MR Vsd ≈ 1.2 V).
 

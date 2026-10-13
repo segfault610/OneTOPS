@@ -22,10 +22,10 @@ with 10 ns load edges and 5 pF pad load.
 
 | | ben = 0 | ben = 1 |
 |---|---|---|
-| Dip at inference burst | 536 mV | **329 mV** |
-| Overshoot inference → comm | 174 mV | 175 mV |
-| Overshoot comm → sleep | 212 mV | 214 mV |
-| Average input current | 2.86 mA | 2.86 mA |
+| Dip at inference burst (Rev D) | 534 mV | **334 mV** |
+| Overshoot inference → comm | 167 mV | 169 mV |
+| Overshoot comm → sleep | 226 mV | 228 mV |
+| Average input current | 2.78 mA | 2.78 mA |
 
 **TODO:** TT analog template + `tt_um_` wrapper; digital `dvs_ctrl` on the digital side; ESD / pad
 considerations on `ua[*]`; floorplan inside 2 × 2 tiles.

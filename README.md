@@ -28,13 +28,14 @@ Every block is its own `.sch` + `.sym`, so it can be placed in the level above l
 | Level | Cell | Function |
 |---|---|---|
 | L0 | `inv`, `tgate` | 1.8 V inverter, transmission gate |
-| L1 | `bias_mirror` | NMOS mirror bank from IB = 20 µA: FVF sink, PMOS reference, OTA tail, boost bias / dead zone |
+| L1 | `bias_mirror` | NMOS mirror bank from IB = 20 µA: FVF sink and replica base (5 µA), OTA tail, boost bias / dead zone |
 | L1 | `vset_gen` | Replica loop: 5T OTA + MR so VSET = VREF − Vsg(MR). VREF input is high-impedance |
 | L1 | `ota5t` | 5-transistor OTA (NMOS in, LVT PMOS mirror) |
 | L1 | `fvf_core` | FVF control PMOS MC (LVT, 100/1 µm) |
 | L1 | `pass_pmos` | Pass device, std-Vt PMOS 70×10/0.35 µm. High \|Vth\| keeps it off at the FVF gate clamp |
 | L1 | `comp_rc` | Miller compensation Rz + Cc (gate X → VOUT) |
 | L1 | `lg_probe` | Tian loop-gain probe (transparent unless `acmag` is altered) |
+| L1 | `ab_sense` | Adaptive bias: 1/500 pass replica adds I_load/500 to the MC and replica bias (Rev D) |
 | L1 | `tr_boost` | Transient boost: AC-coupled undershoot booster (dead zone, ×20 X pull-down), dynamic 100 µA bleeder, X pull-up; `ben` enable |
 | L1 | `mux2_tg`, `rdac4` | 4-bit R-string DAC + TG mux tree: VREF = 1.00 V + 30 mV × code |
 | L1 | `decap`, `load_emu` | 20 pF on-chip decap; on-chip 4-bit 0–9.6 mA workload emulator |
@@ -68,20 +69,21 @@ cd sim/char && ngspice -b gmid.spice && python3 ../../scripts/gmid_table.py   # 
 Testbenches (`xschem/onetops_tb/`): `tb_bias_mirror`, `tb_vset_gen`, `tb_rdac4` (L1);
 `tb_ldo_core_dc/ac/tran` (L2); `tb_ldo_top_dvs` (L3); `tb_chip_workload`, `tb_ams_dvs_ctrl` (L4, RTL co-sim).
 
-## Rev C status (TT, 27 °C, VIN = 1.8 V, C_L = 20 pF on-chip)
+## Rev D status (TT, 27 °C, VIN = 1.8 V, C_L = 20 pF on-chip)
 
 | Metric | Result |
 |---|---|
 | VOUT (DVS) | 1.00–1.45 V, 16 codes, monotonic; **+12…15 mV offset** |
-| Load / line regulation | 1.0 mV/mA / 28 mV/V |
-| PM | 74.8° (10 µA) … 92° (10 mA); worst valid over PVT 46.8° |
-| PSRR | −31 dB @ 1 kHz, −20 dB @ 1 MHz |
-| Iq | 270 µA |
-| 0.1↔10 mA step, boost on (off) | 100 ns: −98 / +107 mV (−170 / +105); 10 ns: −234 / +260 mV (−472 / +258) |
-| Edge-AI workload dip (L4, 10 ns) | **329 mV** with boost vs 536 mV without (AMS run with the real `dvs_ctrl`: 341 mV) |
+| Load / line regulation | 1.07 mV/mA / 24 mV/V |
+| PM | 84.7° (10 µA) … 91° (10 mA); worst valid over PVT 25.2° (hot fs, light load: issue 1) |
+| PSRR | −29…−32 dB @ 1 kHz; −10 dB (light load) … −22 dB (10 mA) @ 1 MHz |
+| Iq | **163 µA** (Rev C: 270 µA), via adaptive bias |
+| 0.1↔10 mA step, boost on (off) | 100 ns: −118 / +130 mV (−267 / +128); 10 ns: −254 / +250 mV (−514 / +248) |
+| Edge-AI workload dip (L4, 10 ns) | **334 mV** with boost vs 534 mV without (AMS run with the real `dvs_ctrl`: 345 mV) |
 
-**Top open issue:** at 125 °C, VIN = 1.98 V and light load, pass-device leakage exceeds the bleeder
-and VOUT drifts up. Details and the rest of the list are in [docs/PROGRESS.md](docs/PROGRESS.md).
+**Top open issue:** at 125 °C on fs/ff corners with light load, pass-device leakage exceeds the bleeder.
+VOUT drifts up at 1.98 V, and PM drops to 25° at 1.8 V. Details, rejected fixes and the rest of the list
+are in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 ## Tiny Tapeout constraints (check the current shuttle docs)
 
@@ -91,7 +93,7 @@ and VOUT drifts up. Details and the rest of the list are in [docs/PROGRESS.md](d
 
 ## Next steps
 
-Adaptive bias (removes the fixed 100 µA bleeder and fixes hot light-load leakage), DC offset fix,
+Hot-leakage fix (shunt clamp or gain-stage gate driver), DC offset fix,
 on-chip references, real sky130 passives, Verilog-A behavioral models, layout → DRC/LVS/PEX → TT wrapper.
 See [docs/PROGRESS.md](docs/PROGRESS.md).
 

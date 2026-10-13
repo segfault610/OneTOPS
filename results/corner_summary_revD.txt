@@ -1,0 +1,16 @@
+AC: 225 (corner, load) points; worst valid PM 25.2 deg @ fs T=125 VIN=1.8 ILOAD=10u
+   INVALID (regulation lost / phase wrap): ff T=125 VIN=1.98 ILOAD=10u PM=383
+   INVALID (regulation lost / phase wrap): ff T=125 VIN=1.98 ILOAD=100u PM=369
+   INVALID (regulation lost / phase wrap): ff T=125 VIN=1.98 ILOAD=1m PM=416
+   INVALID (regulation lost / phase wrap): fs T=125 VIN=1.98 ILOAD=10u PM=374
+   INVALID (regulation lost / phase wrap): fs T=125 VIN=1.98 ILOAD=100u PM=360
+   INVALID (regulation lost / phase wrap): fs T=125 VIN=1.98 ILOAD=1m PM=382
+TRAN worst case over PVT (0.1 <-> 10 mA):
+   boost off edge 100n overshoot   172.0 mV @ fs T=125 VIN=1.98
+   boost off edge 100n undershoot  348.8 mV @ ss T=125 VIN=1.62
+   boost off edge  10n overshoot   310.4 mV @ fs T=125 VIN=1.98
+   boost off edge  10n undershoot  611.0 mV @ ss T=125 VIN=1.62
+   boost on  edge 100n overshoot   162.3 mV @ ss T=125 VIN=1.98
+   boost on  edge 100n undershoot  150.1 mV @ ss T=125 VIN=1.62
+   boost on  edge  10n overshoot   312.9 mV @ fs T=125 VIN=1.62
+   boost on  edge  10n undershoot  321.3 mV @ ss T=125 VIN=1.62

@@ -15,6 +15,7 @@ Our regulator has four parts:
 | Part | Role |
 |---|---|
 | **FVF regulation loop** (`ldo_core`) | Flipped-voltage-follower control device + large PMOS pass device: a fast single-stage loop, stable with only ~20 pF on-chip |
+| **Adaptive bias** (`ab_sense`) | Loop bias tracks load current (1/500 pass replica): low Iq and stable at light load, fast at heavy load |
 | **Transient boost** (`tr_boost`) | Capacitively detects a VOUT dip/spike and briefly injects mA-level current into the pass-device gate. It is off (dead zone) at rest |
 | **4-bit DVS reference** (`rdac4` + `dvs_ctrl`) | Output programmable 1.00–1.45 V in 30 mV steps, slew-limited, with a *workload hint* that pre-raises VOUT before an AI burst |
 | **On-chip workload emulator** (`load_emu`) | 0–9.6 mA digitally switched load, so silicon can be tested with Edge-AI-like current profiles |
@@ -80,7 +81,7 @@ it is integrated.
 | Level | Cells | Characterized by |
 |---|---|---|
 | L0 | `inv`, `tgate` | (used inside L1) |
-| L1 | `bias_mirror`, `vset_gen`, `ota5t`, `fvf_core`, `pass_pmos`, `comp_rc`, `lg_probe`, `tr_boost`, `mux2_tg`, `rdac4`, `decap`, `load_emu` | `tb_bias_mirror`, `tb_vset_gen`, `tb_rdac4` |
+| L1 | `bias_mirror`, `vset_gen`, `ota5t`, `fvf_core`, `pass_pmos`, `comp_rc`, `lg_probe`, `tr_boost`, `ab_sense`, `mux2_tg`, `rdac4`, `decap`, `load_emu` | `tb_bias_mirror`, `tb_vset_gen`, `tb_rdac4` |
 | L2 | `ldo_core` (full regulation loop) | `tb_ldo_core_dc / _ac / _tran` |
 | L3 | `ldo_top` (DVS LDO IP) | `tb_ldo_top_dvs` |
 | L4 | `chip_top` (TT test chip) | `tb_chip_workload`, `tb_ams_dvs_ctrl` (with RTL) |

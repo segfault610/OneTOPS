@@ -5,7 +5,7 @@ K {}
 V {}
 S {}
 E {}
-T {ldo_core -- L2 capacitorless FVF LDO regulation loop (Rev C: + transient boost): VOUT ~= VREF, 0..10 mA} -300 -380 0 0 0.6 0.6 {}
+T {ldo_core -- L2 capacitorless FVF LDO regulation loop (Rev D: + transient boost + adaptive bias): VOUT ~= VREF, 0..10 mA} -300 -380 0 0 0.6 0.6 {}
 C {devices/ipin.sym} -300 -300 0 0 {name=p0 lab=vref}
 C {devices/ipin.sym} -300 -280 0 0 {name=p1 lab=ibn}
 C {devices/ipin.sym} -300 -260 0 0 {name=p2 lab=ben}
@@ -79,3 +79,14 @@ N 1300 250 1280 250 {lab=x}
 C {devices/lab_pin.sym} 1280 250 0 0 {name=l34 sig_type=std_logic lab=x}
 N 1500 250 1520 250 {lab=vout}
 C {devices/lab_pin.sym} 1520 250 0 1 {name=l35 sig_type=std_logic lab=vout}
+C {onetops/ab_sense.sym} 1800 0 0 0 {name=xab}
+N 1690 0 1670 0 {lab=xg}
+C {devices/lab_pin.sym} 1670 0 0 0 {name=l36 sig_type=std_logic lab=xg}
+N 1910 -30 1930 -30 {lab=x}
+C {devices/lab_pin.sym} 1930 -30 0 1 {name=l37 sig_type=std_logic lab=x}
+N 1910 10 1930 10 {lab=i_pd}
+C {devices/lab_pin.sym} 1930 10 0 1 {name=l38 sig_type=std_logic lab=i_pd}
+N 1800 -70 1800 -90 {lab=vin}
+C {devices/lab_pin.sym} 1800 -90 1 1 {name=l39 sig_type=std_logic lab=vin}
+N 1800 70 1800 90 {lab=vss}
+C {devices/lab_pin.sym} 1800 90 3 1 {name=l40 sig_type=std_logic lab=vss}

@@ -3,7 +3,7 @@
 **Ports:** vhi, vlo, d0–d3 (DVS code), ibn, ben, vout, vin, vss.
 **Contains:** `rdac4` (VREF) + `ldo_core`.
 
-**Verification (`tb_ldo_top_dvs`, TT, 5 mA load, 5 µs per code):**
+**Verification (`tb_ldo_top_dvs`, TT, 5 mA load, 5 µs per code; Rev C values. Rev D: +14.7 mV @ code 0, +12.2 @ 7, +11.9 @ 15):**
 
 | code | 0 | 3 | 7 | 11 | 15 |
 |---|---|---|---|---|---|

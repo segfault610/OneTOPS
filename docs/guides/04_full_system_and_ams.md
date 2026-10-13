@@ -18,7 +18,7 @@ with 10 ns load edges:
 ```bash
 scripts/run_tb.sh tb_chip_workload          # or open it in xschem and Simulate (plots VOUT)
 ```
-Expected: inference dip **329 mV with boost, 536 mV without**; overshoot at sleep ~214 mV.
+Expected (Rev D): inference dip **334 mV with boost, 534 mV without**; overshoot at sleep ~228 mV.
 
 ## B. Mixed-signal co-simulation with the real RTL (`tb_ams_dvs_ctrl`)
 
@@ -42,7 +42,7 @@ Port order follows the Verilog port list, and vector bits are listed MSB first.
 Scenario: code_req = 7, with a workload hint from 12 to 28 µs. The controller ramps one LSB per
 0.8 µs to 10 (+90 mV pre-boost) and enables the boost, the 9.6 mA burst hits at 18 µs, then
 code_req = 4 at 30 µs ramps down.
-Expected: `req7: code=7 vout=1.226`, `hint: code=10 vout=1.315 burst dip_mV≈341`, `req4: code=4 vout=1.142`.
+Expected (Rev D): `req7: code=7 vout=1.225`, `hint: code=10 vout=1.314 burst dip_mV≈345`, `req4: code=4 vout=1.143`.
 
 To co-simulate other RTL: add the module name to the loop in `scripts/build_ams.sh` and instantiate
 it with `.model <m> d_cosim simulation=../ams/<m>.so`.
@@ -53,8 +53,8 @@ it with `.model <m> d_cosim simulation=../ams/<m>.so`.
 scripts/run_corners.sh                      # tb_ldo_core_ac + tb_ldo_core_tran over 5 corners x 3 T x 3 VIN (~6 min)
 python3 scripts/corner_summary.py           # worst cases; INVALID = loop lost regulation (phase wrap)
 ```
-Rev C worst valid PM is 46.8°. Five hot/high-VIN light-load points are INVALID (open issue 1 in
-`docs/PROGRESS.md`). Worst undershoot with boost is 127 mV (100 ns) / 296 mV (10 ns).
+Rev D: worst valid PM 25.2° (fs, 125 °C, 1.8 V, 10 µA); six hot/high-VIN light-load points are INVALID
+(open issue 1 in `docs/PROGRESS.md`). Worst undershoot with boost is 150 mV (100 ns) / 321 mV (10 ns).
 
 ## D. Simulation hygiene (lessons learned)
 - **Always give `tran` a max step** (4th argument). Without it, ngspice skipped through the 10 ns

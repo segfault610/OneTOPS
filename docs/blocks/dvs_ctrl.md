@@ -21,7 +21,7 @@ power-up ramp, hint pre-boost, ramp down, saturation at 15, full-scale ramp. The
 there are no multi-LSB jumps and no step faster than STEP_DIV. `verilator --lint-only -Wall` is clean.
 
 **AMS co-sim ✅:** `scripts/build_ams.sh` → `tb_ams_dvs_ctrl` runs this RTL inside ngspice, driving `chip_top`
-(code 7 → hint 10 → 4; VOUT 1.226 → 1.315 → 1.142 V). See `docs/guides/04_full_system_and_ams.md`.
+(code 7 → hint 10 → 4; Rev D VOUT 1.225 → 1.314 → 1.143 V, burst dip 345 mV). See `docs/guides/04_full_system_and_ams.md`.
 
 **TODO:** choose STEP_DIV from the measured VREF/VOUT
 settling; synthesize for the TT digital tile (sky130_fd_sc_hd).

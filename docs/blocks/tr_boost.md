@@ -11,13 +11,13 @@ hardly depended on C_L (Rev B: 295 mV at 100 pF vs 287 mV at 10 pF).
 | Path | What it does | Devices | Quiescent |
 |---|---|---|---|
 | **UB** (undershoot booster) | Cbu (0.5 pF) couples VOUT onto the gate of PMOS sensor MPB1, which is biased in weak inversion through Rbu = 1 MΩ from diode MPB0. A dip raises MPB1's current exponentially. A **dead zone** (20 µA sink `i_dz` vs 10 µA idle) keeps the pull-down off at rest; beyond it, MNB0 → MNB1 (×20) pulls X down through the `ben` switch | MPB0 LVT 40/0.5, MPB1 LVT 20/0.5, MNB0/1 2/0.5 (×20), MSW 10/0.15 | 20 µA (MPB0) + 10 µA |
-| **OB** (dynamic bleeder) | The 100 µA minimum-load bleeder MND (5 × 4/1) has its gate AC-coupled to VOUT (Cbo 0.5 pF, Rbo 1 MΩ from `ibn`), so an overshoot raises its sink current. A side effect is that it damps the output pole: TT PM rises from 55.8° to 74.8° | MND nfet 4/1 ×5 | 100 µA (it *is* the bleeder) |
+| **OB** (dynamic bleeder) | The minimum-load bleeder MND (Rev D: 2 × 4/1 = 40 µA; Rev C: 100 µA) has its gate AC-coupled to VOUT (Cbo 0.5 pF, Rbo 1 MΩ from `ibn`), so an overshoot raises its sink current. A side effect is that it damps the output pole: TT PM rises from 55.8° to 74.8° | MND nfet 4/1 ×2 | 40 µA (it *is* the bleeder) |
 | **OBX** (X pull-up) | NMOS sensor MNS1 on the same coupled gate, a 20 µA PMOS dead zone, then MPO0 → MPO1 (×20, **std-Vt**) pull X up through the PMOS switch (gate = ben inverted) | MNS1 2/1, MPDZ LVT 40/0.5, MPO0/1 pfet 4/0.5 (×20), MPSW 20/0.15, `inv` | ~10 µA |
 
 Flags `SIZES["boost"] = {ub, ob, obx}` remove paths for A/B studies. The `ben` pin disables UB
 and OBX on silicon (OB always acts, because it is the bleeder).
 
-## Results (TT, C_L = 20 pF, 0.1 ↔ 10 mA)
+## Results (Rev C, TT, C_L = 20 pF, 0.1 ↔ 10 mA). Rev D numbers are in `ab_sense.md`
 
 | | ben = 0 | **ben = 1** |
 |---|---|---|

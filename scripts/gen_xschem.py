@@ -28,7 +28,10 @@ PDK_LIB = "/usr/local/share/pdk/sky130A/libs.tech/combined/sky130.lib.spice"
 # ---------------------------------------------------------------- sizing (Rev A) --
 SIZES = dict(
     bias=dict(W=4, L=1),                  # NMOS mirror bank, 20 uA unit (gm/Id ~ 10)
-    bleed_m=5,                            # (dynamic) bleeder MND = 5 x IB = 100 uA quiescent, in tr_boost
+    bias_base=dict(W=1, L=1),             # Rev D: o_fvf / o_pd base bias = 5 uA (adaptive part added by ab_sense)
+    bleed_m=2,                            # (dynamic) bleeder MND = 2 x IB = 40 uA quiescent (Rev C: 5 x = 100 uA)
+    ab_sense=dict(W=1.4, L=0.35),         # Rev D: pass replica, 1/500 of the 700 um pass device -> Iload/500
+    ab_mirror=dict(W=4, L=1),             # sensed-current mirror into X sink and replica path (1:1)
     tail_m=2,                             # OTA tail = 2 x IB
     mc=dict(W=100, L=1),                  # FVF control PMOS (LVT), gm/Id ~ 14 @ 20 uA
     mr=dict(W=100, L=1),                  # replica PMOS (LVT), must match MC
@@ -220,12 +223,12 @@ def gen_bias_mirror():
     s.ports(["ibn"], ["o_fvf", "o_pd", "o_tail", "o_bu", "o_dz"], ["vss"])
     b = S["bias"]
     s.mos("nfet_01v8", "MN0", 0, 0, dict(D="ibn", G="ibn", S="vss", B="vss"), **b)
-    s.mos("nfet_01v8", "MN1", 200, 0, dict(D="o_fvf", G="ibn", S="vss", B="vss"), **b)
+    s.mos("nfet_01v8", "MN1", 200, 0, dict(D="o_fvf", G="ibn", S="vss", B="vss"), **S["bias_base"])
     s.mos("nfet_01v8", "MN2", 400, 0, dict(D="o_bu", G="ibn", S="vss", B="vss"), **b)
-    s.mos("nfet_01v8", "MN3", 600, 0, dict(D="o_pd", G="ibn", S="vss", B="vss"), **b)
+    s.mos("nfet_01v8", "MN3", 600, 0, dict(D="o_pd", G="ibn", S="vss", B="vss"), **S["bias_base"])
     s.mos("nfet_01v8", "MN4", 800, 0, dict(D="o_tail", G="ibn", S="vss", B="vss"), mult=S["tail_m"], **b)
     s.mos("nfet_01v8", "MN5", 1000, 0, dict(D="o_dz", G="ibn", S="vss", B="vss"), **b)
-    s.text(0, 100, "1x each (20 uA): o_fvf FVF node X sink, o_pd PMOS ref, o_bu UB sensor bias, o_dz UB dead zone; o_tail 2x", 0.3)
+    s.text(0, 100, "o_fvf, o_pd: 5 uA base (W=1; adaptive part from ab_sense). o_bu, o_dz: 20 uA. o_tail: 40 uA", 0.3)
     s.write(p)
 
 
@@ -348,7 +351,7 @@ def gen_tr_boost():
         s.two("res", "Rbo", 1100, -150, "ibn", "gso", S["rb"])
         s.two("capa", "Cbo", 1200, -150, "vout", "gso", S["cbo"])
     s.mos("nfet_01v8", "MND", 1100, 100, dict(D="vout", G=gso, S="vss", B="vss"), mult=S["bleed_m"], **S["bias"])
-    s.text(1000, 230, "OB: MND = 100 uA minimum-load bleeder whose gate is AC-coupled to VOUT (overshoot => more sink)", 0.25)
+    s.text(1000, 230, "OB: MND = 40 uA minimum-load bleeder whose gate is AC-coupled to VOUT (overshoot => more sink)", 0.25)
     if S["boost"]["obx"]:
         assert S["boost"]["ob"] and S["boost"]["ub"], "OBX shares the OB coupled gate and the UB PMOS bias"
         s.mos("pfet_01v8_lvt", "MPDZ", 1500, -150, dict(S="vin", G="i_bu", D="ndo", B="vin"), **S["mpb0"])
@@ -363,11 +366,24 @@ def gen_tr_boost():
     s.write(p)
 
 
+def gen_ab_sense():
+    p = cell("ab_sense", [("g", "in")], [("o_x", "out"), ("o_rep", "out")], top=[("vin", "inout")], bottom=[("vss", "inout")])
+    s = Sch("ab_sense -- L1 adaptive bias (Rev D): pass-device replica senses Iload/500 and adds it to the MC bias "
+            "(sink at X) and to the VSET replica, so VOUT does not shift")
+    s.ports(["g"], ["o_x", "o_rep"], ["vin", "vss"])
+    s.mos("pfet_01v8", "MS", 0, -150, dict(S="vin", G="g", D="ns", B="vin"), **S["ab_sense"])
+    s.mos("nfet_01v8", "MSD", 0, 100, dict(D="ns", G="ns", S="vss", B="vss"), **S["ab_mirror"])
+    s.mos("nfet_01v8", "MSX", 250, 100, dict(D="o_x", G="ns", S="vss", B="vss"), **S["ab_mirror"])
+    s.mos("nfet_01v8", "MSR", 500, 100, dict(D="o_rep", G="ns", S="vss", B="vss"), **S["ab_mirror"])
+    s.text(0, 230, "Layout: MS must sit inside the pass-device array (same Vth/stress) for a good 1:500 ratio", 0.3)
+    s.write(p)
+
+
 # =========================================================== L2 subsystem ======
 def gen_ldo_core():
     p = cell("ldo_core", [("vref", "in"), ("ibn", "in"), ("ben", "in")], [("vout", "inout")],
              top=[("vin", "inout")], bottom=[("vss", "inout")])
-    s = Sch("ldo_core -- L2 capacitorless FVF LDO regulation loop (Rev C: + transient boost): VOUT ~= VREF, 0..10 mA")
+    s = Sch("ldo_core -- L2 capacitorless FVF LDO regulation loop (Rev D: + transient boost + adaptive bias): VOUT ~= VREF, 0..10 mA")
     s.ports(["vref", "ibn", "ben"], [], ["vout", "vin", "vss"])
     s.inst("bias_mirror", "xbias", 0, 0, dict(ibn="ibn", o_fvf="x", o_pd="i_pd", o_tail="i_tail", o_bu="i_bu", o_dz="i_dz", vss="vss"))
     s.inst("tr_boost", "xboost", 0, 300, dict(ibn="ibn", ben="ben", i_bu="i_bu", i_dz="i_dz", x="x", vin="vin", vout="vout", vss="vss"))
@@ -376,6 +392,7 @@ def gen_ldo_core():
     s.inst("lg_probe", "xprobe", 1000, 250, dict(drv="x", lin="xg"))
     s.inst("pass_pmos", "xpass", 1400, 0, dict(g="xg", vout="vout", vin="vin"))
     s.inst("comp_rc", "xcomp", 1400, 250, dict(a="x", b="vout"))
+    s.inst("ab_sense", "xab", 1800, 0, dict(g="xg", o_x="x", o_rep="i_pd", vin="vin", vss="vss"))
     s.write(p)
 
 
@@ -479,7 +496,9 @@ dc vo1 0 1.8 0.01
 let i1 = -i(vo1)
 let i2 = -i(vo2)
 meas dc i_fvf_06 find i1 at=0.6
-meas dc vds_min when i1=19u cross=1
+* compliance: Vds where o_fvf reaches 95 % of its value at 0.6 V
+let i95 = 0.95*i_fvf_06
+meas dc vds_min when i1=i95 cross=1
 op
 print -i(vo1) -i(vo2) -i(vo3) -i(vo4) -i(vo5)
 .endc""")
@@ -760,7 +779,7 @@ if __name__ == "__main__":
         os.makedirs(os.path.join(ROOT, "xschem", d), exist_ok=True)
     # order matters: a cell's symbol must exist before a parent instantiates it
     for g in (gen_inv, gen_tgate, gen_bias_mirror, gen_fvf_core, gen_pass_pmos, gen_comp_rc,
-              gen_lg_probe, gen_ota5t, gen_vset_gen, gen_mux2_tg, gen_rdac4, gen_tr_boost, gen_ldo_core, gen_ldo_top,
+              gen_lg_probe, gen_ota5t, gen_vset_gen, gen_mux2_tg, gen_rdac4, gen_tr_boost, gen_ab_sense, gen_ldo_core, gen_ldo_top,
               gen_decap, gen_load_emu, gen_chip_top):
         g()
     gen_tbs()

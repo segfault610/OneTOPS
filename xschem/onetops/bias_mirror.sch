@@ -37,7 +37,7 @@ N 20 0 40 0 {lab=vss}
 C {devices/lab_pin.sym} 40 0 0 1 {name=l10 sig_type=std_logic lab=vss}
 C {sky130_fd_pr/nfet_01v8.sym} 200 0 0 0 {name=MN1
 L=1
-W=4
+W=1
 nf=1
 mult=1
 ad="expr('int((@nf + 1)/2) * @W / @nf * 0.29')"
@@ -81,7 +81,7 @@ N 420 0 440 0 {lab=vss}
 C {devices/lab_pin.sym} 440 0 0 1 {name=l18 sig_type=std_logic lab=vss}
 C {sky130_fd_pr/nfet_01v8.sym} 600 0 0 0 {name=MN3
 L=1
-W=4
+W=1
 nf=1
 mult=1
 ad="expr('int((@nf + 1)/2) * @W / @nf * 0.29')"
@@ -145,4 +145,4 @@ N 1020 30 1020 50 {lab=vss}
 C {devices/lab_pin.sym} 1020 50 3 1 {name=l29 sig_type=std_logic lab=vss}
 N 1020 0 1040 0 {lab=vss}
 C {devices/lab_pin.sym} 1040 0 0 1 {name=l30 sig_type=std_logic lab=vss}
-T {1x each (20 uA): o_fvf FVF node X sink, o_pd PMOS ref, o_bu UB sensor bias, o_dz UB dead zone; o_tail 2x} 0 100 0 0 0.3 0.3 {}
+T {o_fvf, o_pd: 5 uA base (W=1; adaptive part from ab_sense). o_bu, o_dz: 20 uA. o_tail: 40 uA} 0 100 0 0 0.3 0.3 {}

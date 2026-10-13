@@ -24,15 +24,15 @@ scripts/run_tb.sh all              # netlists every testbench with xschem, simul
 ```
 
 `run_tb.sh` prints the key numbers per testbench, and the full logs go to `results/<tb>.log`.
-On the current design (Rev C) you should see, among others:
+On the current design (Rev D) you should see, among others:
 
 ```
 === tb_ldo_core_tran
-TRAN BEN=1.8 EDGE=100n under_mV=98.2 over_mV=106.6
-TRAN BEN=0 EDGE=100n under_mV=170.2 over_mV=104.9
+TRAN BEN=1.8 EDGE=100n under_mV=118.1 over_mV=130.0
+TRAN BEN=0 EDGE=100n under_mV=266.9 over_mV=127.7
 === tb_ams_dvs_ctrl
-AMS req7: code=7 vout=1.22585
-AMS hint: code=10 vout=1.31505 burst dip_mV=340.6
+AMS req7: code=7 vout=1.22492
+AMS hint: code=10 vout=1.3139 burst dip_mV=344.8
 ```
 
 If a number moves by more than a few percent and you didn't change the design, check the `!!`

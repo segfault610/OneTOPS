@@ -64,7 +64,9 @@ dc vo1 0 1.8 0.01
 let i1 = -i(vo1)
 let i2 = -i(vo2)
 meas dc i_fvf_06 find i1 at=0.6
-meas dc vds_min when i1=19u cross=1
+* compliance: Vds where o_fvf reaches 95 % of its value at 0.6 V
+let i95 = 0.95*i_fvf_06
+meas dc vds_min when i1=i95 cross=1
 op
 print -i(vo1) -i(vo2) -i(vo3) -i(vo4) -i(vo5)
 if $?batchmode
