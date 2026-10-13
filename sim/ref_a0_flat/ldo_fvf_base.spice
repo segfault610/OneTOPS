@@ -1,0 +1,24 @@
+* Baseline capacitorless FVF LDO (sky130A, 1.8 V devices)  -- revision A (TT: PM >= 48 deg for 10 uA..10 mA, CL=100 pF)
+* Pins: vin vout vref vss ibn
+*   ibn : bias input, sink 20 uA into it from VIN (diode NMOS mirror reference)
+*   vref: target output; VSET = VREF - Vsg(MR) so VOUT = VSET + Vsg(MC) ~= VREF
+* MP  : pass device, std-Vt PMOS (high |Vth| keeps it off at the FVF gate clamp X ~ VOUT-0.2 V)
+* MC  : FVF control PMOS (LVT), MR replica (LVT) sets VSET with matched current
+* Cc  : Miller compensation across the pass device (gate X to VOUT)
+* NOTE: use m= for device multiplicity; in this sky130 model set mult= only scales mismatch
+.subckt ldo_fvf_base vin vout vref vss ibn
++ WP=10 MP_M=70 LP=0.35 WC=100 LC=1 WBN=4 LBN=1 CC=12p RZ=1 MBL=5
+XN0 ibn ibn vss vss sky130_fd_pr__nfet_01v8 L={LBN} W={WBN} nf=1 m=1
+XN1 x   ibn vss vss sky130_fd_pr__nfet_01v8 L={LBN} W={WBN} nf=1 m=1
+XN2 vset ibn vss vss sky130_fd_pr__nfet_01v8 L={LBN} W={WBN} nf=1 m=1
+* minimum-load bleeder (MBL x IB): keeps the output pole above the UGF at light load
+XN3 vout ibn vss vss sky130_fd_pr__nfet_01v8 L={LBN} W={WBN} nf=1 m={MBL}
+XMR vset vset vref vref sky130_fd_pr__pfet_01v8_lvt L={LC} W={WC} nf=1 m=1
+XMC x    vset vout vout sky130_fd_pr__pfet_01v8_lvt L={LC} W={WC} nf=1 m=1
+XMP vout xg vin vin sky130_fd_pr__pfet_01v8 L={LP} W={WP} nf=1 m={MP_M}
+* xg = pass gate; Vbrk/Iinj form a Tian loop-gain probe (both ac 0 in normal use, see tb_ac.spice)
+Vbrk xg x dc 0 ac 0
+Iinj 0 xg dc 0 ac 0
+Rz x xc {RZ}
+Cc xc vout {CC}
+.ends

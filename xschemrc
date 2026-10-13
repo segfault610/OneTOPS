@@ -1,0 +1,6 @@
+# OneTOPS project xschemrc: inherit the sky130A open_pdks setup, then add project paths
+set PDK_ROOT /usr/local/share/pdk
+set PDK sky130A
+source $PDK_ROOT/$PDK/libs.tech/xschem/xschemrc
+append XSCHEM_LIBRARY_PATH :[file dirname [info script]]/xschem
+set netlist_dir [file dirname [info script]]/sim/xschem_netlist

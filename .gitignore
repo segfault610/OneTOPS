@@ -1,0 +1,9 @@
+# simulator outputs (regenerate with scripts/run_tb.sh)
+*.raw
+*.vvp
+sim/xschem_netlist/*.spice
+results/*.log
+# raw sweep dumps (regenerate with sim/char/gmid.spice); keep the summary tables
+results/gmid_*_L*.txt
+results/pass_sizing.txt
+results/ldo_base_*.txt

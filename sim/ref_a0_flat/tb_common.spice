@@ -1,0 +1,4 @@
+* shared testbench header: models + stimulus defaults (include from each tb)
+.lib /usr/local/share/pdk/sky130A/libs.tech/combined/sky130.lib.spice tt
+.param VIN=1.8 VREF=1.2 IB=20u CL=100p ILOAD=1m IBLEED=0
+.temp 27

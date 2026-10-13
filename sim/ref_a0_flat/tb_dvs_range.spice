@@ -1,0 +1,16 @@
+* DVS range: VOUT vs VREF at 0 and 10 mA external load (VIN = 1.8 V, TT)
+.include tb_common.spice
+.include ldo_fvf_base.spice
+Vin vin 0 {VIN}
+Vref vref 0 {VREF}
+Ib vin ibn {IB}
+Xldo vin vout vref 0 ibn ldo_fvf_base
+Il vout 0 0
+.control
+foreach il 0 10m
+  alter Il dc=$il
+  dc Vref 0.8 1.6 0.1
+  print v(vref) v(vout) v(xldo.x)
+end
+.endc
+.end

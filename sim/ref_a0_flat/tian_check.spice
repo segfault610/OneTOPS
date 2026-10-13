@@ -1,0 +1,32 @@
+* Validate Tian loop-gain probe on a known loop: A0=1000, poles 1 kHz and 1 MHz, unity feedback
+* Expected: |T| = 60 dB at DC, UGF ~ 0.79 MHz, PM ~ 52 deg
+G1 0 n1 p x 1m
+R1 n1 0 1Meg
+C1 n1 0 159.15p
+E2 out 0 n1 0 1
+R2 out o2 1k
+C2 o2 0 159.15p
+Ebuf y 0 o2 0 1
+* break point: driver side y, loop-input side x. Convention: Vi + on x, Ii injects into x (verified)
+Vi x y dc 0 ac 1
+Ii 0 x dc 0 ac 0
+Rin x 0 1Meg
+Vp p 0 dc 0
+.control
+ac dec 20 1 1G
+alter @vi[acmag]=0
+alter @ii[acmag]=1
+ac dec 20 1 1G
+* ac1 = voltage injection, ac2 = current injection
+let vx1 = ac1.v(x)
+let iv1 = ac1.i(vi)
+let vx2 = ac2.v(x)
+let iv2 = ac2.i(vi)
+let T = -1/(1-1/(2*(iv1*vx2-vx1*iv2)+vx1+iv2))
+let Tdb = db(T)
+let Tph = 180/pi*cph(T)
+meas ac t0 find Tdb at=1
+meas ac ugf when Tdb=0
+meas ac ph_ugf find Tph when Tdb=0
+.endc
+.end

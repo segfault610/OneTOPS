@@ -1,0 +1,35 @@
+* DC: load regulation (0..10 mA), line regulation (1.4..1.95 V), quiescent current
+.include tb_common.spice
+.include ldo_fvf_base.spice
+Vin vin 0 {VIN}
+Vref vref 0 {VREF}
+Ib vin ibn {IB}
+Xldo vin vout vref 0 ibn ldo_fvf_base
+Il vout 0 {ILOAD}
+.control
+op
+echo "VOUT @1mA = $&v(vout)   VX = $&v(xldo.x)   VSET = $&v(xldo.vset)"
+dc Il 0 10.1m 0.1m
+meas dc vnl find v(vout) at=0
+meas dc vfl find v(vout) at=10m
+let loadreg_mVpermA = (vnl-vfl)/10*1000
+print loadreg_mVpermA
+meas dc vx_min min v(xldo.x)
+wrdata ../../results/ldo_base_loadreg.txt v(vout) v(xldo.x)
+alter Il dc=0
+dc Vin 1.4 1.95 0.01
+meas dc iq0 find i(vin) at=1.8
+let iq_uA = -iq0*1e6
+print iq_uA
+alter Il dc=10m
+dc Vin 1.3 1.95 0.01
+meas dc v18 find v(vout) at=1.8
+meas dc v165 find v(vout) at=1.65
+let linereg_mVperV = (v18-v165)/0.15*1000
+print linereg_mVperV
+meas dc vdo when v(vout)=1.188
+let dropout_mV = (vdo - 1.188)*1000
+print dropout_mV
+wrdata ../../results/ldo_base_linereg_10mA.txt v(vout)
+.endc
+.end

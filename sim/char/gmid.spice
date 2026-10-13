@@ -1,0 +1,41 @@
+* gm/Id characterization, sky130A, TT 27C. Usage: ngspice -b gmid.spice
+* Dumps per-L tables: vgs id gm gds gm/id id/w  for nfet_01v8, pfet_01v8, pfet_01v8_lvt
+.lib /usr/local/share/pdk/sky130A/libs.tech/combined/sky130.lib.spice tt
+.param LL=0.15 WW=10
+Vgn gn 0 0.9
+Vdn dn 0 0.9
+XMN dn gn 0 0 sky130_fd_pr__nfet_01v8 L={LL} W={WW} nf=1 mult=1
+Vgp gp 0 0.9
+Vdp dp 0 0.9
+XMP dp gp vdd vdd sky130_fd_pr__pfet_01v8 L={LL} W={WW} nf=1 mult=1
+Vgl gl 0 0.9
+Vdl dl 0 0.9
+XML dl gl vdd vdd sky130_fd_pr__pfet_01v8_lvt L={max(LL,0.35)} W={WW} nf=1 mult=1
+Vdd vdd 0 1.8
+.control
+foreach lv 0.15 0.35 0.5 1 2
+  alterparam LL=$lv
+  reset
+  save all
+  save @m.xmn.msky130_fd_pr__nfet_01v8[id] @m.xmn.msky130_fd_pr__nfet_01v8[gm] @m.xmn.msky130_fd_pr__nfet_01v8[gds] @m.xmn.msky130_fd_pr__nfet_01v8[vth]
+  save @m.xmp.msky130_fd_pr__pfet_01v8[id] @m.xmp.msky130_fd_pr__pfet_01v8[gm] @m.xmp.msky130_fd_pr__pfet_01v8[gds] @m.xmp.msky130_fd_pr__pfet_01v8[vth]
+  save @m.xml.msky130_fd_pr__pfet_01v8_lvt[id] @m.xml.msky130_fd_pr__pfet_01v8_lvt[gm] @m.xml.msky130_fd_pr__pfet_01v8_lvt[gds] @m.xml.msky130_fd_pr__pfet_01v8_lvt[vth]
+  * nfet: Vgs 0..1.8, Vds=0.9 ; pfets: |Vgs| 0..1.8 with |Vds|=0.9
+  dc Vgn 0 1.8 0.01
+  let idn = @m.xmn.msky130_fd_pr__nfet_01v8[id]
+  let gmn = @m.xmn.msky130_fd_pr__nfet_01v8[gm]
+  let gdn = @m.xmn.msky130_fd_pr__nfet_01v8[gds]
+  wrdata ../../results/gmid_nfet_L{$lv}.txt idn gmn gdn
+  dc Vgp 1.8 0 -0.01
+  let idp = @m.xmp.msky130_fd_pr__pfet_01v8[id]
+  let gmp = @m.xmp.msky130_fd_pr__pfet_01v8[gm]
+  let gdp = @m.xmp.msky130_fd_pr__pfet_01v8[gds]
+  wrdata ../../results/gmid_pfet_L{$lv}.txt idp gmp gdp
+  dc Vgl 1.8 0 -0.01
+  let idl = @m.xml.msky130_fd_pr__pfet_01v8_lvt[id]
+  let gml = @m.xml.msky130_fd_pr__pfet_01v8_lvt[gm]
+  let gdl = @m.xml.msky130_fd_pr__pfet_01v8_lvt[gds]
+  wrdata ../../results/gmid_pfetlvt_L{$lv}.txt idl gml gdl
+end
+.endc
+.end

@@ -1,0 +1,48 @@
+* AC: loop gain (Tian probe at the pass-gate break point) and PSRR, swept over load current
+.include tb_common.spice
+.include ldo_fvf_base.spice
+.param CCV=12p RZV=1 MPM=70
+Vin vin 0 dc {VIN} ac 0
+Vref vref 0 {VREF}
+Ib vin ibn {IB}
+Xldo vin vout vref 0 ibn ldo_fvf_base CC={CCV} RZ={RZV} MP_M={MPM}
+Il vout 0 {ILOAD}
+Ibl vout 0 {IBLEED}
+Cl vout 0 {CL}
+.control
+set loads = ( 10u 100u 1m 5m 10m )
+foreach il $loads
+  alter Il dc=$il
+  * --- Tian run 1: voltage injection (Vbrk ac=1), run 2: current injection (Iinj ac=1)
+  alter @vin[acmag]=0
+  alter @v.xldo.vbrk[acmag]=1
+  ac dec 20 10 10G
+  let vx1 = v(xldo.xg)
+  let iv1 = v.xldo.vbrk#branch
+  set p1 = $curplot
+  alter @v.xldo.vbrk[acmag]=0
+  alter @i.xldo.iinj[acmag]=1
+  ac dec 20 10 10G
+  let vx2 = v(xldo.xg)
+  let iv2 = v.xldo.vbrk#branch
+  let vx1 = {$p1}.vx1
+  let iv1 = {$p1}.iv1
+  let lg = -1/(1-1/(2*(iv1*vx2-vx1*iv2)+vx1+iv2))
+  let Tdb = db(lg)
+  let Tph = 180/pi*cph(lg)
+  meas ac t0 find Tdb at=10 
+  meas ac ugf when Tdb=0
+  meas ac phu find Tph at=ugf
+  let pm = 180 + phu
+  echo "LG ILOAD=$il T0dB=$&t0 UGF=$&ugf PM=$&pm"
+  * --- PSRR run
+  alter @i.xldo.iinj[acmag]=0
+  alter @vin[acmag]=1
+  ac dec 20 10 10G
+  meas ac ps1k find vdb(vout) at=1k
+  meas ac ps1m find vdb(vout) at=1Meg
+  echo "PSRR ILOAD=$il 1k=$&ps1k 1M=$&ps1m"
+  alter @vin[acmag]=0
+end
+.endc
+.end
