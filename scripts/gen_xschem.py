@@ -28,7 +28,7 @@ PDK_LIB = "/usr/local/share/pdk/sky130A/libs.tech/combined/sky130.lib.spice"
 # ---------------------------------------------------------------- sizing (Rev A) --
 SIZES = dict(
     bias=dict(W=4, L=1),                  # NMOS mirror bank, 20 uA unit (gm/Id ~ 10)
-    bleed_m=5,                            # minimum-load bleeder = 5 x IB = 100 uA
+    bleed_m=5,                            # (dynamic) bleeder MND = 5 x IB = 100 uA quiescent, in tr_boost
     tail_m=2,                             # OTA tail = 2 x IB
     mc=dict(W=100, L=1),                  # FVF control PMOS (LVT), gm/Id ~ 14 @ 20 uA
     mr=dict(W=100, L=1),                  # replica PMOS (LVT), must match MC
@@ -44,6 +44,16 @@ SIZES = dict(
     inv_n=dict(W=1, L=0.15), inv_p=dict(W=2, L=0.15),
     tg_n=dict(W=1, L=0.15), tg_p=dict(W=2, L=0.15),
     rlad="10k",                           # R-DAC unit resistor (16 in series)
+    # ---- tr_boost (Rev C): undershoot booster (UB) + overshoot booster (OB)
+    boost=dict(ub=True, ob=True, obx=True),  # False = remove that path (for A/B studies)
+    mpb0=dict(W=40, L=0.5),               # UB sensor bias diode (LVT PMOS), 20 uA
+    mpb1=dict(W=20, L=0.5),               # UB sensor (LVT PMOS), 10 uA quiescent (< 20 uA dead zone)
+    mnb=dict(W=2, L=0.5), mnb_m=20,       # UB dead-zone diode / x20 pull-down mirror at node X
+    msw=dict(W=10, L=0.15),               # UB enable switch (ben)
+    rb="1Meg", cbu="0.5p", cbo="0.5p",    # coupling: R to bias, Cb from VOUT (tau ~ 0.5 us). TODO: pseudo-R
+    mns=dict(W=2, L=1),                   # OBX NMOS sensor on the coupled bleeder gate, 10 uA quiescent
+    mpo=dict(W=4, L=0.5), mpo_m=20,       # OBX PMOS (std-Vt) dead-zone diode / x20 pull-up mirror at node X
+    mpsw=dict(W=20, L=0.15),              # OBX enable switch (PMOS, gate = ben inverted)
 )
 
 # symbol pin geometry for PDK MOS symbols (pin -> (dx, dy, stub direction))
@@ -204,17 +214,18 @@ def gen_tgate():
 # ============================================================== L1 blocks ======
 def gen_bias_mirror():
     p = cell("bias_mirror", [("ibn", "in")],
-             [("o_fvf", "out"), ("o_bl", "out"), ("o_pd", "out"), ("o_tail", "out")],
+             [("o_fvf", "out"), ("o_pd", "out"), ("o_tail", "out"), ("o_bu", "out"), ("o_dz", "out")],
              bottom=[("vss", "inout")])
-    s = Sch("bias_mirror -- L1 NMOS mirror bank (IB=20 uA in -> FVF sink, bleeder, PMOS-ref, OTA tail)")
-    s.ports(["ibn"], ["o_fvf", "o_bl", "o_pd", "o_tail"], ["vss"])
+    s = Sch("bias_mirror -- L1 NMOS mirror bank (IB=20 uA in -> FVF sink, PMOS-ref, OTA tail, boost bias, dead zone)")
+    s.ports(["ibn"], ["o_fvf", "o_pd", "o_tail", "o_bu", "o_dz"], ["vss"])
     b = S["bias"]
     s.mos("nfet_01v8", "MN0", 0, 0, dict(D="ibn", G="ibn", S="vss", B="vss"), **b)
     s.mos("nfet_01v8", "MN1", 200, 0, dict(D="o_fvf", G="ibn", S="vss", B="vss"), **b)
-    s.mos("nfet_01v8", "MN2", 400, 0, dict(D="o_bl", G="ibn", S="vss", B="vss"), mult=S["bleed_m"], **b)
+    s.mos("nfet_01v8", "MN2", 400, 0, dict(D="o_bu", G="ibn", S="vss", B="vss"), **b)
     s.mos("nfet_01v8", "MN3", 600, 0, dict(D="o_pd", G="ibn", S="vss", B="vss"), **b)
     s.mos("nfet_01v8", "MN4", 800, 0, dict(D="o_tail", G="ibn", S="vss", B="vss"), mult=S["tail_m"], **b)
-    s.text(0, 100, "o_fvf: 1x (FVF node X sink)   o_bl: 5x min-load bleeder   o_pd: 1x   o_tail: 2x", 0.3)
+    s.mos("nfet_01v8", "MN5", 1000, 0, dict(D="o_dz", G="ibn", S="vss", B="vss"), **b)
+    s.text(0, 100, "1x each (20 uA): o_fvf FVF node X sink, o_pd PMOS ref, o_bu UB sensor bias, o_dz UB dead zone; o_tail 2x", 0.3)
     s.write(p)
 
 
@@ -316,13 +327,50 @@ def gen_rdac4():
     s.write(p)
 
 
+def gen_tr_boost():
+    left = [("ibn", "in"), ("ben", "in"), ("i_bu", "inout"), ("i_dz", "inout")]
+    p = cell("tr_boost", left, [("x", "inout")], top=[("vin", "inout"), ("vout", "inout")], bottom=[("vss", "inout")])
+    s = Sch("tr_boost -- L1 transient boost: UB (VOUT dip -> AC-coupled PMOS sensor -> dead zone -> x20 pull-down of X) "
+            "+ OB (dynamic bleeder, AC-coupled)")
+    s.ports(["ibn", "ben"], [], ["i_bu", "i_dz", "x", "vin", "vout", "vss"])
+    if S["boost"]["ub"]:
+        s.mos("pfet_01v8_lvt", "MPB0", 0, -150, dict(S="vin", G="i_bu", D="i_bu", B="vin"), **S["mpb0"])
+        s.two("res", "Rbu", 200, -150, "i_bu", "gsu", S["rb"])
+        s.two("capa", "Cbu", 300, -150, "vout", "gsu", S["cbu"])
+        s.mos("pfet_01v8_lvt", "MPB1", 500, -150, dict(S="vin", G="gsu", D="i_dz", B="vin"), **S["mpb1"])
+        s.mos("nfet_01v8", "MNB0", 500, 100, dict(D="i_dz", G="i_dz", S="vss", B="vss"), **S["mnb"])
+        s.mos("nfet_01v8", "MNB1", 750, 100, dict(D="nsw", G="i_dz", S="vss", B="vss"), mult=S["mnb_m"], **S["mnb"])
+        s.mos("nfet_01v8", "MSW", 750, -100, dict(D="x", G="ben", S="nsw", B="vss"), **S["msw"])
+        s.text(0, 230, "UB: MPB1 idles at 10 uA into a 20 uA dead-zone sink (i_dz) => pull-down off at rest; "
+               "a VOUT dip lowers gsu, MPB1 current exceeds the sink and MNB1 (x20) discharges X", 0.25)
+    gso = "gso" if S["boost"]["ob"] else "ibn"
+    if S["boost"]["ob"]:
+        s.two("res", "Rbo", 1100, -150, "ibn", "gso", S["rb"])
+        s.two("capa", "Cbo", 1200, -150, "vout", "gso", S["cbo"])
+    s.mos("nfet_01v8", "MND", 1100, 100, dict(D="vout", G=gso, S="vss", B="vss"), mult=S["bleed_m"], **S["bias"])
+    s.text(1000, 230, "OB: MND = 100 uA minimum-load bleeder whose gate is AC-coupled to VOUT (overshoot => more sink)", 0.25)
+    if S["boost"]["obx"]:
+        assert S["boost"]["ob"] and S["boost"]["ub"], "OBX shares the OB coupled gate and the UB PMOS bias"
+        s.mos("pfet_01v8_lvt", "MPDZ", 1500, -150, dict(S="vin", G="i_bu", D="ndo", B="vin"), **S["mpb0"])
+        s.mos("nfet_01v8", "MNS1", 1500, 100, dict(D="ndo", G="gso", S="vss", B="vss"), **S["mns"])
+        # std-Vt (not LVT): an 80 um LVT pull-up leaks > 20 uA into X at 125 C and breaks regulation
+        s.mos("pfet_01v8", "MPO0", 1750, -150, dict(S="vin", G="ndo", D="ndo", B="vin"), **S["mpo"])
+        s.mos("pfet_01v8", "MPO1", 2000, -150, dict(S="vin", G="ndo", D="psw", B="vin"), mult=S["mpo_m"], **S["mpo"])
+        s.mos("pfet_01v8", "MPSW", 2000, 100, dict(S="psw", G="benb", D="x", B="vin"), **S["mpsw"])
+        s.inst("inv", "xinv", 2300, 0, dict(a="ben", y="benb", vdd="vin", vss="vss"))
+        s.text(1500, 230, "OBX: MNS1 idles at 10 uA against a 20 uA PMOS dead-zone source; a VOUT rise lifts gso, "
+               "MNS1 exceeds it and MPO1 (x20) pulls X up (pass device off fast)", 0.25)
+    s.write(p)
+
+
 # =========================================================== L2 subsystem ======
 def gen_ldo_core():
-    p = cell("ldo_core", [("vref", "in"), ("ibn", "in")], [("vout", "inout")],
+    p = cell("ldo_core", [("vref", "in"), ("ibn", "in"), ("ben", "in")], [("vout", "inout")],
              top=[("vin", "inout")], bottom=[("vss", "inout")])
-    s = Sch("ldo_core -- L2 capacitorless FVF LDO regulation loop (Rev A): VOUT ~= VREF, 0..10 mA, CL<=100 pF")
-    s.ports(["vref", "ibn"], [], ["vout", "vin", "vss"])
-    s.inst("bias_mirror", "xbias", 0, 0, dict(ibn="ibn", o_fvf="x", o_bl="vout", o_pd="i_pd", o_tail="i_tail", vss="vss"))
+    s = Sch("ldo_core -- L2 capacitorless FVF LDO regulation loop (Rev C: + transient boost): VOUT ~= VREF, 0..10 mA")
+    s.ports(["vref", "ibn", "ben"], [], ["vout", "vin", "vss"])
+    s.inst("bias_mirror", "xbias", 0, 0, dict(ibn="ibn", o_fvf="x", o_pd="i_pd", o_tail="i_tail", o_bu="i_bu", o_dz="i_dz", vss="vss"))
+    s.inst("tr_boost", "xboost", 0, 300, dict(ibn="ibn", ben="ben", i_bu="i_bu", i_dz="i_dz", x="x", vin="vin", vout="vout", vss="vss"))
     s.inst("vset_gen", "xvset", 500, 0, dict(vref="vref", i_pd="i_pd", i_tail="i_tail", vset="vset", vin="vin"))
     s.inst("fvf_core", "xfvf", 1000, 0, dict(vset="vset", x="x", vout="vout"))
     s.inst("lg_probe", "xprobe", 1000, 250, dict(drv="x", lin="xg"))
@@ -356,24 +404,24 @@ def gen_load_emu():
 
 # ================================================================= L3 top ======
 def gen_ldo_top():
-    left = [("vhi", "inout"), ("vlo", "inout"), ("d0", "in"), ("d1", "in"), ("d2", "in"), ("d3", "in"), ("ibn", "in")]
+    left = [("vhi", "inout"), ("vlo", "inout"), ("d0", "in"), ("d1", "in"), ("d2", "in"), ("d3", "in"), ("ibn", "in"), ("ben", "in")]
     p = cell("ldo_top", left, [("vout", "inout")], top=[("vin", "inout")], bottom=[("vss", "inout")])
     s = Sch("ldo_top -- L3 DVS LDO: 4-bit code -> rdac4 -> VREF -> ldo_core. VOUT = 1.00 + 0.03*code V")
-    s.ports(["d0", "d1", "d2", "d3", "ibn"], [], ["vhi", "vlo", "vout", "vin", "vss"])
+    s.ports(["d0", "d1", "d2", "d3", "ibn", "ben"], [], ["vhi", "vlo", "vout", "vin", "vss"])
     s.inst("rdac4", "xdac", 0, 0, dict(vhi="vhi", vlo="vlo", d0="d0", d1="d1", d2="d2", d3="d3", out="vref", vdd="vin", vss="vss"))
-    s.inst("ldo_core", "xcore", 500, 0, dict(vref="vref", ibn="ibn", vout="vout", vin="vin", vss="vss"))
+    s.inst("ldo_core", "xcore", 500, 0, dict(vref="vref", ibn="ibn", ben="ben", vout="vout", vin="vin", vss="vss"))
     s.write(p)
 
 
 # ================================================================ L4 chip ======
 def gen_chip_top():
     left = [("vhi", "inout"), ("vlo", "inout"), ("d0", "in"), ("d1", "in"), ("d2", "in"), ("d3", "in"),
-            ("ibn", "in"), ("ld0", "in"), ("ld1", "in"), ("ld2", "in"), ("ld3", "in"), ("ibl", "in")]
+            ("ibn", "in"), ("ben", "in"), ("ld0", "in"), ("ld1", "in"), ("ld2", "in"), ("ld3", "in"), ("ibl", "in")]
     p = cell("chip_top", left, [("vout", "inout")], top=[("vin", "inout")], bottom=[("vss", "inout")])
     s = Sch("chip_top -- L4 Tiny Tapeout test chip: DVS LDO + 20 pF decap + on-chip workload emulator")
-    s.ports(["d0", "d1", "d2", "d3", "ibn", "ld0", "ld1", "ld2", "ld3", "ibl"], [], ["vhi", "vlo", "vout", "vin", "vss"])
+    s.ports(["d0", "d1", "d2", "d3", "ibn", "ben", "ld0", "ld1", "ld2", "ld3", "ibl"], [], ["vhi", "vlo", "vout", "vin", "vss"])
     s.inst("ldo_top", "xldo", 0, 0, dict(vhi="vhi", vlo="vlo", d0="d0", d1="d1", d2="d2", d3="d3",
-                                        ibn="ibn", vout="vout", vin="vin", vss="vss"))
+                                        ibn="ibn", ben="ben", vout="vout", vin="vin", vss="vss"))
     s.inst("decap", "xdecap", 500, 0, dict(a="vout", b="vss"))
     s.inst("load_emu", "xload", 900, 0, dict(ld0="ld0", ld1="ld1", ld2="ld2", ld3="ld3", ibl="ibl", vout="vout", vss="vss"))
     s.text(0, 300, "TT mapping (planned): vout -> ua[0] (sense only, pin max 4 mA), vref monitor -> ua[1], d[3:0]/ld[3:0] -> ui_in", 0.3)
@@ -392,6 +440,7 @@ def tb(name, title, build, control):
 def supplies(s, vin="1.8", ib="20u"):
     s.two("vsource", "Vin", -200, 0, "vin", "0", f"dc {vin} ac 0")
     s.two("isource", "Ib", -100, 0, "vin", "ibn", f"dc {ib}")
+    s.two("vsource", "Vben", -300, 0, "ben", "0", "dc 1.8")
 
 
 def gen_tbs():
@@ -399,8 +448,8 @@ def gen_tbs():
     def b_bias(s):
         s.two("vsource", "Vdd", -200, 0, "vdd", "0", "1.8")
         s.two("isource", "Ib", -100, 0, "vdd", "ibn", "dc 20u")
-        s.inst("bias_mirror", "xdut", 200, 0, dict(ibn="ibn", o_fvf="o1", o_bl="o2", o_pd="o3", o_tail="o4", vss="0"))
-        for i in range(1, 5):
+        s.inst("bias_mirror", "xdut", 200, 0, dict(ibn="ibn", o_fvf="o1", o_pd="o2", o_tail="o3", o_bu="o4", o_dz="o5", vss="0"))
+        for i in range(1, 6):
             s.two("vsource", f"Vo{i}", 450 + 100 * i, 0, f"o{i}", "0", "dc 0.6")
     tb("tb_bias_mirror", "tb_bias_mirror -- L1: mirror output currents vs Vds (compliance)", b_bias, """.control
 dc vo1 0 1.8 0.01
@@ -409,16 +458,17 @@ let i2 = -i(vo2)
 meas dc i_fvf_06 find i1 at=0.6
 meas dc vds_min when i1=19u cross=1
 op
-print -i(vo1) -i(vo2) -i(vo3) -i(vo4)
+print -i(vo1) -i(vo2) -i(vo3) -i(vo4) -i(vo5)
 .endc""")
 
     # ---- L1: vset_gen DC tracking over the DVS range
     def b_vset(s):
         supplies(s)
         s.two("vsource", "Vref", 0, 0, "vref", "0", "dc 1.2")
-        s.inst("bias_mirror", "xbias", 300, 0, dict(ibn="ibn", o_fvf="x", o_bl="vbl", o_pd="i_pd", o_tail="i_tail", vss="0"))
+        s.inst("bias_mirror", "xbias", 300, 0, dict(ibn="ibn", o_fvf="x", o_pd="i_pd", o_tail="i_tail", o_bu="vb1", o_dz="vb2", vss="0"))
         s.two("vsource", "Vx", 550, 0, "x", "0", "dc 0.8")
-        s.two("vsource", "Vbl", 650, 0, "vbl", "0", "dc 1.2")
+        s.two("vsource", "Vb1", 650, 0, "vb1", "0", "dc 1.2")
+        s.two("vsource", "Vb2", 750, 0, "vb2", "0", "dc 1.2")
         s.inst("vset_gen", "xdut", 900, 0, dict(vref="vref", i_pd="i_pd", i_tail="i_tail", vset="vset", vin="vin"))
     tb("tb_vset_gen", "tb_vset_gen -- L1: VSET tracking, replica error (vrep - vref) vs VREF", b_vset, """.control
 dc vref 0.95 1.5 0.05
@@ -455,8 +505,8 @@ end
     def b_core(s, tran=False):
         supplies(s)
         s.two("vsource", "Vref", 0, 0, "vref", "0", "dc 1.2")
-        s.inst("ldo_core", "xldo", 300, 0, dict(vref="vref", ibn="ibn", vout="vout", vin="vin", vss="0"))
-        il = "pwl(0 0.1m 2u 0.1m 2.1u 10m 6u 10m 6.1u 0.1m 12u 0.1m)" if tran else "dc 1m"
+        s.inst("ldo_core", "xldo", 300, 0, dict(vref="vref", ibn="ibn", ben="ben", vout="vout", vin="vin", vss="0"))
+        il = "pwl(0 0.1m 2u 0.1m {2u+tedge} 10m 6u 10m {6u+tedge} 0.1m 12u 0.1m)" if tran else "dc 1m"
         s.two("isource", "Il", 600, 0, "vout", "0", il)
         s.two("capa", "Cl", 700, 0, "vout", "0", S["cl"])
 
@@ -517,18 +567,27 @@ end
 .endc""")
 
     # ---- L2: ldo_core load transient
-    tb("tb_ldo_core_tran", f"tb_ldo_core_tran -- L2: 0.1 <-> 10 mA load step, 100 ns edges, CL = {S['cl']}",
-       lambda s: b_core(s, tran=True), """.control
-tran 1n 12u
-meas tran vpre find v(vout) at=1.9u
-meas tran vmin min v(vout) from=2u to=6u
-meas tran vhi find v(vout) at=5.9u
-meas tran vmax max v(vout) from=6u to=12u
-let under_mV = (vpre - vmin)*1000
-let over_mV = (vmax - vhi)*1000
-print under_mV over_mV
-write tb_ldo_core_tran.raw
-.endc""")
+    tran_ctl = """.param tedge=100n
+.control
+foreach ben 1.8 0
+  foreach tr 100n 10n
+    alterparam tedge=$tr
+    reset
+    alter @vben[dc]=$ben
+    tran 1n 12u
+    meas tran vpre find v(vout) at=1.9u
+    meas tran vmin min v(vout) from=2u to=6u
+    meas tran vhi find v(vout) at=5.9u
+    meas tran vmax max v(vout) from=6u to=12u
+    meas tran vend find v(vout) at=11.9u
+    let under_mV = (vpre - vmin)*1000
+    let over_mV = (vmax - vhi)*1000
+    echo TRAN BEN=$ben EDGE=$tr under_mV=$&under_mV over_mV=$&over_mV
+  end
+end
+.endc"""
+    tb("tb_ldo_core_tran", f"tb_ldo_core_tran -- L2: 0.1 <-> 10 mA load step, 100 ns and 10 ns edges, boost on/off, CL = {S['cl']}",
+       lambda s: b_core(s, tran=True), tran_ctl)
 
     # ---- L3: DVS code steps at 5 mA
     def b_top(s):
@@ -540,7 +599,7 @@ write tb_ldo_core_tran.raw
             s.two("vsource", f"Vd{b}", 200 + 100 * b, 0, f"d{b}", "0",
                   f"pulse(0 1.8 {per / 2:g} 10n 10n {per / 2 - 1e-8:g} {per:g})")
         s.inst("ldo_top", "xtop", 900, 0, dict(vhi="vhi", vlo="vlo", d0="d0", d1="d1", d2="d2", d3="d3",
-                                              ibn="ibn", vout="vout", vin="vin", vss="0"))
+                                              ibn="ibn", ben="ben", vout="vout", vin="vin", vss="0"))
         s.two("isource", "Il", 1200, 0, "vout", "0", "dc 5m")
         s.two("capa", "Cl", 1300, 0, "vout", "0", S["cl"])
     tb("tb_ldo_top_dvs", "tb_ldo_top_dvs -- L3: DVS staircase, code 0..15 (5 us/code) at 5 mA", b_top, """.control
@@ -578,11 +637,14 @@ write tb_ldo_top_dvs.raw
                 pts += [f"{t}u {1.8 * lvl:g}", f"{t}.01u {1.8 * v:g}"]
                 lvl = v
             s.two("vsource", f"Vl{b}", 700 + 100 * b, 0, f"ld{b}", "0", "pwl(" + " ".join(pts) + ")")
-        s.inst("chip_top", "xchip", 1400, 0, dict(vhi="vhi", vlo="vlo", d0="d0", d1="d1", d2="d2", d3="d3", ibn="ibn",
+        s.inst("chip_top", "xchip", 1400, 0, dict(vhi="vhi", vlo="vlo", d0="d0", d1="d1", d2="d2", d3="d3", ibn="ibn", ben="ben",
                ld0="ld0", ld1="ld1", ld2="ld2", ld3="ld3", ibl="ibl", vout="vout", vin="vin", vss="0"))
         s.two("capa", "Cpad", 1700, 0, "vout", "0", "5p")
     tb("tb_chip_workload", "tb_chip_workload -- L4: sleep -> sense -> DVS up -> inference -> comm -> DVS down -> sleep",
        b_chip, """.control
+foreach ben 1.8 0
+alter @vben[dc]=$ben
+echo WORKLOAD BEN=$ben
 tran 5n 70u
 meas tran v_sleep find v(vout) at=9.5u
 meas tran v_sense find v(vout) at=29u
@@ -600,7 +662,7 @@ print under_inf_mV over_comm_mV over_sleep_mV
 meas tran iin_avg avg i(vin) from=0 to=70u
 let iavg_mA = -iin_avg*1000
 print iavg_mA
-write tb_chip_workload.raw
+end
 .endc""")
 
 
@@ -609,7 +671,7 @@ if __name__ == "__main__":
         os.makedirs(os.path.join(ROOT, "xschem", d), exist_ok=True)
     # order matters: a cell's symbol must exist before a parent instantiates it
     for g in (gen_inv, gen_tgate, gen_bias_mirror, gen_fvf_core, gen_pass_pmos, gen_comp_rc,
-              gen_lg_probe, gen_ota5t, gen_vset_gen, gen_mux2_tg, gen_rdac4, gen_ldo_core, gen_ldo_top,
+              gen_lg_probe, gen_ota5t, gen_vset_gen, gen_mux2_tg, gen_rdac4, gen_tr_boost, gen_ldo_core, gen_ldo_top,
               gen_decap, gen_load_emu, gen_chip_top):
         g()
     gen_tbs()

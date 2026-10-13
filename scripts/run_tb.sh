@@ -11,6 +11,6 @@ for tb in "${tbs[@]}"; do
   (cd "$ROOT" && timeout 120 xschem --rcfile xschemrc -n -s -q -x -o "$NL" "xschem/onetops_tb/$tb.sch" >/dev/null 2>&1)
   (cd "$NL" && timeout 900 ngspice -b "$tb.spice" > "$ROOT/results/$tb.log" 2>&1) || echo "!! $tb: ngspice exit $?"
   echo "=== $tb"
-  grep -E "^(LG|PSRR|VOUT|code|[0-9]+ )|_mv|_ua|_ma|_mv_per|under|over|^v_|^vm|^-i|err" "$ROOT/results/$tb.log" | grep -v -i "^error" || true
+  grep -E "^(LG|PSRR|VOUT|code|[0-9]+ )|_mv|_ua|_ma|_mv_per|under|over|^v_|^vm|^TRAN|^WORKLOAD|^-i|err" "$ROOT/results/$tb.log" | grep -v -i "^error" || true
   grep -iE "^error|fatal|singular|timestep too small" "$ROOT/results/$tb.log" | sort | uniq -c | head -5 || true
 done

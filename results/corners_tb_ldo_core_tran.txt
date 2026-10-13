@@ -1,45 +1,45 @@
-tt T=-40 VIN=1.62 | under_mv = 1.352140e+02 over_mv = 9.233200e+01 
-tt T=-40 VIN=1.8 | under_mv = 1.317540e+02 over_mv = 8.880400e+01 
-tt T=-40 VIN=1.98 | under_mv = 1.292990e+02 over_mv = 8.773600e+01 
-tt T=27 VIN=1.62 | under_mv = 1.748610e+02 over_mv = 1.160490e+02 
-tt T=27 VIN=1.8 | under_mv = 1.713330e+02 over_mv = 1.133390e+02 
-tt T=27 VIN=1.98 | under_mv = 1.691910e+02 over_mv = 1.128510e+02 
-tt T=125 VIN=1.62 | under_mv = 2.272219e+02 over_mv = 1.444290e+02 
-tt T=125 VIN=1.8 | under_mv = 2.241700e+02 over_mv = 1.430780e+02 
-tt T=125 VIN=1.98 | under_mv = 2.324850e+02 over_mv = 1.516360e+02 
-ss T=-40 VIN=1.62 | under_mv = 1.374630e+02 over_mv = 9.267600e+01 
-ss T=-40 VIN=1.8 | under_mv = 1.337090e+02 over_mv = 8.786800e+01 
-ss T=-40 VIN=1.98 | under_mv = 1.310810e+02 over_mv = 8.663200e+01 
-ss T=27 VIN=1.62 | under_mv = 1.775040e+02 over_mv = 1.155960e+02 
-ss T=27 VIN=1.8 | under_mv = 1.736720e+02 over_mv = 1.122700e+02 
-ss T=27 VIN=1.98 | under_mv = 1.711970e+02 over_mv = 1.114860e+02 
-ss T=125 VIN=1.62 | under_mv = 2.306055e+02 over_mv = 1.433060e+02 
-ss T=125 VIN=1.8 | under_mv = 2.269185e+02 over_mv = 1.413500e+02 
-ss T=125 VIN=1.98 | under_mv = 2.321680e+02 over_mv = 1.470000e+02 
-ff T=-40 VIN=1.62 | under_mv = 1.332390e+02 over_mv = 9.292200e+01 
-ff T=-40 VIN=1.8 | under_mv = 1.300400e+02 over_mv = 9.013900e+01 
-ff T=-40 VIN=1.98 | under_mv = 1.277690e+02 over_mv = 8.922600e+01 
-ff T=27 VIN=1.62 | under_mv = 1.725190e+02 over_mv = 1.170490e+02 
-ff T=27 VIN=1.8 | under_mv = 1.692630e+02 over_mv = 1.147690e+02 
-ff T=27 VIN=1.98 | under_mv = 1.675540e+02 over_mv = 1.146480e+02 
-ff T=125 VIN=1.62 | under_mv = 2.242334e+02 over_mv = 1.460210e+02 
-ff T=125 VIN=1.8 | under_mv = 2.219720e+02 over_mv = 1.452490e+02 
-ff T=125 VIN=1.98 | under_mv = 2.338700e+02 over_mv = 1.579600e+02 
-sf T=-40 VIN=1.62 | under_mv = 1.356710e+02 over_mv = 9.471200e+01 
-sf T=-40 VIN=1.8 | under_mv = 1.317150e+02 over_mv = 8.660200e+01 
-sf T=-40 VIN=1.98 | under_mv = 1.290560e+02 over_mv = 8.515800e+01 
-sf T=27 VIN=1.62 | under_mv = 1.750640e+02 over_mv = 1.150850e+02 
-sf T=27 VIN=1.8 | under_mv = 1.711650e+02 over_mv = 1.106850e+02 
-sf T=27 VIN=1.98 | under_mv = 1.685640e+02 over_mv = 1.096020e+02 
-sf T=125 VIN=1.62 | under_mv = 2.273248e+02 over_mv = 1.415050e+02 
-sf T=125 VIN=1.8 | under_mv = 2.234080e+02 over_mv = 1.390290e+02 
-sf T=125 VIN=1.98 | under_mv = 2.254410e+02 over_mv = 1.419350e+02 
-fs T=-40 VIN=1.62 | under_mv = 1.356550e+02 over_mv = 9.484400e+01 
-fs T=-40 VIN=1.8 | under_mv = 1.324970e+02 over_mv = 9.257000e+01 
-fs T=-40 VIN=1.98 | under_mv = 1.302630e+02 over_mv = 9.184500e+01 
-fs T=27 VIN=1.62 | under_mv = 1.754540e+02 over_mv = 1.194500e+02 
-fs T=27 VIN=1.8 | under_mv = 1.722200e+02 over_mv = 1.174770e+02 
-fs T=27 VIN=1.98 | under_mv = 1.712130e+02 over_mv = 1.180160e+02 
-fs T=125 VIN=1.62 | under_mv = 2.279683e+02 over_mv = 1.491590e+02 
-fs T=125 VIN=1.8 | under_mv = 2.268250e+02 over_mv = 1.491980e+02 
-fs T=125 VIN=1.98 | under_mv = 2.446130e+02 over_mv = 1.696700e+02 
+tt T=-40 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=86.084 over_mV=86.394 BEN=1.8 EDGE=10n under_mV=190.597 over_mV=219.015 BEN=0 EDGE=100n under_mV=134.064 over_mV=85.926 BEN=0 EDGE=10n under_mV=411.317 over_mV=217.749 
+tt T=-40 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=80.502 over_mV=83.055 BEN=1.8 EDGE=10n under_mV=174.717 over_mV=213.521 BEN=0 EDGE=100n under_mV=130.53 over_mV=82.6 BEN=0 EDGE=10n under_mV=408.019 over_mV=212.312 
+tt T=-40 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=74.456 over_mV=82.153 BEN=1.8 EDGE=10n under_mV=169.919 over_mV=211.194 BEN=0 EDGE=100n under_mV=128.049 over_mV=81.562 BEN=0 EDGE=10n under_mV=405.591 over_mV=209.973 
+tt T=27 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=102.474 over_mV=108.029 BEN=1.8 EDGE=10n under_mV=234.958 over_mV=265.141 BEN=0 EDGE=100n under_mV=173.869 over_mV=107.351 BEN=0 EDGE=10n under_mV=474.897 over_mV=263.567 
+tt T=27 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=97.051 over_mV=106.448 BEN=1.8 EDGE=10n under_mV=221.007 over_mV=260.34 BEN=0 EDGE=100n under_mV=170.251 over_mV=104.761 BEN=0 EDGE=10n under_mV=471.887 over_mV=258.607 
+tt T=27 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=88.104 over_mV=105.423 BEN=1.8 EDGE=10n under_mV=203.772 over_mV=259.564 BEN=0 EDGE=100n under_mV=168.068 over_mV=104.174 BEN=0 EDGE=10n under_mV=469.644 over_mV=256.146 
+tt T=125 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=119.623 over_mV=135.412 BEN=1.8 EDGE=10n under_mV=277.42 over_mV=312.912 BEN=0 EDGE=100n under_mV=226.676 over_mV=133.801 BEN=0 EDGE=10n under_mV=554.099 over_mV=309.721 
+tt T=125 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=111.28 over_mV=133.819 BEN=1.8 EDGE=10n under_mV=268.614 over_mV=316.153 BEN=0 EDGE=100n under_mV=223.535 over_mV=132.312 BEN=0 EDGE=10n under_mV=551.627 over_mV=311.646 
+tt T=125 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=104.391 over_mV=138.792 BEN=1.8 EDGE=10n under_mV=256.867 over_mV=313.295 BEN=0 EDGE=100n under_mV=232.382 over_mV=138.713 BEN=0 EDGE=10n under_mV=551.233 over_mV=309.701 
+ss T=-40 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=90.235 over_mV=86.964 BEN=1.8 EDGE=10n under_mV=199.258 over_mV=218.507 BEN=0 EDGE=100n under_mV=136.365 over_mV=86.474 BEN=0 EDGE=10n under_mV=417.452 over_mV=217.162 
+ss T=-40 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=84.831 over_mV=82.426 BEN=1.8 EDGE=10n under_mV=178.5 over_mV=211.802 BEN=0 EDGE=100n under_mV=132.516 over_mV=81.956 BEN=0 EDGE=10n under_mV=413.891 over_mV=210.532 
+ss T=-40 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=77.604 over_mV=81.256 BEN=1.8 EDGE=10n under_mV=173.509 over_mV=209.246 BEN=0 EDGE=100n under_mV=129.853 over_mV=80.78 BEN=0 EDGE=10n under_mV=411.392 over_mV=208.013 
+ss T=27 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=107.419 over_mV=107.833 BEN=1.8 EDGE=10n under_mV=241.085 over_mV=265.131 BEN=0 EDGE=100n under_mV=176.59 over_mV=107.2 BEN=0 EDGE=10n under_mV=481.663 over_mV=263.498 
+ss T=27 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=100.167 over_mV=104.986 BEN=1.8 EDGE=10n under_mV=228.847 over_mV=259.404 BEN=0 EDGE=100n under_mV=172.65 over_mV=104.035 BEN=0 EDGE=10n under_mV=478.493 over_mV=257.766 
+ss T=27 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=95.706 over_mV=104.496 BEN=1.8 EDGE=10n under_mV=215.77 over_mV=257.313 BEN=0 EDGE=100n under_mV=170.119 over_mV=103.202 BEN=0 EDGE=10n under_mV=476.131 over_mV=255.169 
+ss T=125 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=125.098 over_mV=134.739 BEN=1.8 EDGE=10n under_mV=282.42 over_mV=312.201 BEN=0 EDGE=100n under_mV=230.189 over_mV=133.049 BEN=0 EDGE=10n under_mV=561.304 over_mV=309.996 
+ss T=125 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=118.652 over_mV=132.769 BEN=1.8 EDGE=10n under_mV=275.924 over_mV=316.341 BEN=0 EDGE=100n under_mV=226.38 over_mV=131.098 BEN=0 EDGE=10n under_mV=558.648 over_mV=311.676 
+ss T=125 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=112.613 over_mV=136.679 BEN=1.8 EDGE=10n under_mV=268.607 over_mV=314.016 BEN=0 EDGE=100n under_mV=231.99 over_mV=135.209 BEN=0 EDGE=10n under_mV=557.782 over_mV=309.429 
+ff T=-40 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=83.501 over_mV=86.653 BEN=1.8 EDGE=10n under_mV=182.087 over_mV=220.747 BEN=0 EDGE=100n under_mV=132.048 over_mV=86.207 BEN=0 EDGE=10n under_mV=405.462 over_mV=219.527 
+ff T=-40 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=76.09 over_mV=84.036 BEN=1.8 EDGE=10n under_mV=171.969 over_mV=216.036 BEN=0 EDGE=100n under_mV=128.789 over_mV=83.578 BEN=0 EDGE=10n under_mV=402.329 over_mV=214.833 
+ff T=-40 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=66.743 over_mV=83.797 BEN=1.8 EDGE=10n under_mV=164.792 over_mV=213.959 BEN=0 EDGE=100n under_mV=126.483 over_mV=82.674 BEN=0 EDGE=10n under_mV=399.961 over_mV=212.578 
+ff T=27 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=98.55 over_mV=109.009 BEN=1.8 EDGE=10n under_mV=228.192 over_mV=265.841 BEN=0 EDGE=100n under_mV=171.458 over_mV=107.987 BEN=0 EDGE=10n under_mV=468.373 over_mV=264.281 
+ff T=27 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=89.951 over_mV=107.021 BEN=1.8 EDGE=10n under_mV=210.83 over_mV=262.232 BEN=0 EDGE=100n under_mV=168.125 over_mV=105.793 BEN=0 EDGE=10n under_mV=465.505 over_mV=259.918 
+ff T=27 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=80.777 over_mV=106.447 BEN=1.8 EDGE=10n under_mV=188.922 over_mV=261.072 BEN=0 EDGE=100n under_mV=166.394 over_mV=105.506 BEN=0 EDGE=10n under_mV=463.396 over_mV=257.577 
+ff T=125 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=109.882 over_mV=136.2 BEN=1.8 EDGE=10n under_mV=268.324 over_mV=312.829 BEN=0 EDGE=100n under_mV=223.577 over_mV=134.901 BEN=0 EDGE=10n under_mV=547.195 over_mV=309.771 
+ff T=125 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=98.154 over_mV=133.516 BEN=1.8 EDGE=10n under_mV=252.719 over_mV=315.125 BEN=0 EDGE=100n under_mV=221.267 over_mV=133.89 BEN=0 EDGE=10n under_mV=544.956 over_mV=311.938 
+ff T=125 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=86.021 over_mV=114.345 BEN=1.8 EDGE=10n under_mV=234.774 over_mV=290.297 BEN=0 EDGE=100n under_mV=233.887 over_mV=143.427 BEN=0 EDGE=10n under_mV=545.014 over_mV=310.338 
+sf T=-40 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=86.826 over_mV=88.75 BEN=1.8 EDGE=10n under_mV=190.683 over_mV=216.612 BEN=0 EDGE=100n under_mV=134.486 over_mV=88.352 BEN=0 EDGE=10n under_mV=413.094 over_mV=215.521 
+sf T=-40 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=82.396 over_mV=81.123 BEN=1.8 EDGE=10n under_mV=174.077 over_mV=206.879 BEN=0 EDGE=100n under_mV=130.446 over_mV=80.738 BEN=0 EDGE=10n under_mV=409.104 over_mV=205.853 
+sf T=-40 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=76.128 over_mV=79.757 BEN=1.8 EDGE=10n under_mV=169.999 over_mV=204.121 BEN=0 EDGE=100n under_mV=127.737 over_mV=79.375 BEN=0 EDGE=10n under_mV=406.522 over_mV=203.12 
+sf T=27 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=103.364 over_mV=107.183 BEN=1.8 EDGE=10n under_mV=232.399 over_mV=260.594 BEN=0 EDGE=100n under_mV=174.029 over_mV=106.67 BEN=0 EDGE=10n under_mV=476.458 over_mV=259.258 
+sf T=27 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=97.542 over_mV=103.179 BEN=1.8 EDGE=10n under_mV=217 over_mV=253.954 BEN=0 EDGE=100n under_mV=170.014 over_mV=102.507 BEN=0 EDGE=10n under_mV=473.132 over_mV=252.623 
+sf T=27 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=90.12 over_mV=102.937 BEN=1.8 EDGE=10n under_mV=201.277 over_mV=251.51 BEN=0 EDGE=100n under_mV=167.367 over_mV=101.423 BEN=0 EDGE=10n under_mV=470.716 over_mV=249.893 
+sf T=125 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=120.439 over_mV=132.735 BEN=1.8 EDGE=10n under_mV=274.505 over_mV=307.351 BEN=0 EDGE=100n under_mV=226.724 over_mV=131.216 BEN=0 EDGE=10n under_mV=555.451 over_mV=305.744 
+sf T=125 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=111.92 over_mV=130.265 BEN=1.8 EDGE=10n under_mV=265.865 over_mV=310.159 BEN=0 EDGE=100n under_mV=222.682 over_mV=128.829 BEN=0 EDGE=10n under_mV=552.703 over_mV=305.938 
+sf T=125 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=107.002 over_mV=132.032 BEN=1.8 EDGE=10n under_mV=255.767 over_mV=307.589 BEN=0 EDGE=100n under_mV=224.912 over_mV=130.842 BEN=0 EDGE=10n under_mV=551.351 over_mV=303.464 
+fs T=-40 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=86.273 over_mV=88.518 BEN=1.8 EDGE=10n under_mV=196.76 over_mV=227.829 BEN=0 EDGE=100n under_mV=134.554 over_mV=87.969 BEN=0 EDGE=10n under_mV=410.954 over_mV=226.308 
+fs T=-40 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=78.921 over_mV=86.4 BEN=1.8 EDGE=10n under_mV=175.968 over_mV=223.482 BEN=0 EDGE=100n under_mV=131.331 over_mV=85.811 BEN=0 EDGE=10n under_mV=407.928 over_mV=221.984 
+fs T=-40 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=72.271 over_mV=86.461 BEN=1.8 EDGE=10n under_mV=170.777 over_mV=221.595 BEN=0 EDGE=100n under_mV=129.067 over_mV=85.067 BEN=0 EDGE=10n under_mV=405.598 over_mV=219.809 
+fs T=27 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=102.224 over_mV=111.626 BEN=1.8 EDGE=10n under_mV=240.125 over_mV=272.799 BEN=0 EDGE=100n under_mV=174.518 over_mV=110.245 BEN=0 EDGE=10n under_mV=474.332 over_mV=270.911 
+fs T=27 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=95.972 over_mV=109.673 BEN=1.8 EDGE=10n under_mV=226.055 over_mV=269.957 BEN=0 EDGE=100n under_mV=171.202 over_mV=108.324 BEN=0 EDGE=10n under_mV=471.515 over_mV=266.957 
+fs T=27 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=86.451 over_mV=109.777 BEN=1.8 EDGE=10n under_mV=206.102 over_mV=268.65 BEN=0 EDGE=100n under_mV=170.21 over_mV=108.561 BEN=0 EDGE=10n under_mV=469.561 over_mV=264.734 
+fs T=125 VIN=1.62 | BEN=1.8 EDGE=100n under_mV=109.8 over_mV=139.294 BEN=1.8 EDGE=10n under_mV=272.141 over_mV=318.371 BEN=0 EDGE=100n under_mV=227.517 over_mV=137.897 BEN=0 EDGE=10n under_mV=553.67 over_mV=315.306 
+fs T=125 VIN=1.8 | BEN=1.8 EDGE=100n under_mV=95.477 over_mV=134.655 BEN=1.8 EDGE=10n under_mV=254.38 over_mV=320.84 BEN=0 EDGE=100n under_mV=226.366 over_mV=137.511 BEN=0 EDGE=10n under_mV=551.679 over_mV=319.141 
+fs T=125 VIN=1.98 | BEN=1.8 EDGE=100n under_mV=82.514 over_mV=106.787 BEN=1.8 EDGE=10n under_mV=233.631 over_mV=284.137 BEN=0 EDGE=100n under_mV=245.1 over_mV=153.255 BEN=0 EDGE=10n under_mV=552.151 over_mV=318.532 

@@ -10,7 +10,7 @@ for tb in "${tbs[@]}"; do
     f="$NL/_corner_$tb.spice"
     sed -e "s/sky130.lib.spice tt/sky130.lib.spice $c/" -e "s/^\.temp 27/.temp $t/" \
         -e "s/^Vin vin 0 dc 1.8/Vin vin 0 dc $v/" "$NL/$tb.spice" > "$f"
-    r=$(cd "$NL" && ngspice -b "$f" 2>&1 | grep -E "^LG|^under_mv|^over_mv" | sed 's/LG //' | tr '\n' ' ')
+    r=$(cd "$NL" && ngspice -b "$f" 2>&1 | grep -E "^LG|^TRAN" | sed "s/^LG //; s/^TRAN //" | tr '\n' ' ')
     echo "$c T=$t VIN=$v | $r" >> "$out"
   done; done; done
   rm -f "$NL/_corner_$tb.spice"
